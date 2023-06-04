@@ -52,21 +52,29 @@ internal class PropertyAttributeFinder
             
             if (s != null)
             {
-                
-                return s.GetMembers().OfType<IPropertySymbol>();
+
+                return FilterBasePropertiesRecursive(ref s);
             }
 
         }
         return Enumerable.Empty<IPropertySymbol>();
 
     }
-    private List<IPropertySymbol> FilterBasePropertiesRecursive(INamedTypeSymbol s)
+    /// <summary>
+    /// Walks through a base class of a class and retrieves all allowed Properties.
+    /// Then it tries to get it's own base class and get from it all allowed Properties recursively.
+    /// All the Properties get summed up.
+    /// </summary>
+    /// <param name="currentBaseType">The base class which the ClassDeclarationSyntax has</param>
+    /// <returns>All allowed Properties in any base class in the inheritance tree</returns>
+    private IEnumerable<IPropertySymbol> FilterBasePropertiesRecursive(ref INamedTypeSymbol s)
     {
-        if (s.BaseType != null)
+        var nextBaseType = s.BaseType;
+        var result = Enumerable.Empty<IPropertySymbol>();
+        if(s.BaseType != null)
         {
-            List<IPropertySymbol> baseProperties = new List<IPropertySymbol>();
-            baseProperties.AddRange(s.GetMembers().OfType<IPropertySymbol>());
+            result = FilterBasePropertiesRecursive(ref nextBaseType);
         }
-        return new List<IPropertySymbol>();
+        return s.GetMembers().OfType<IPropertySymbol>().Concat(result);
     }
 }
