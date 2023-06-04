@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace StrideSourceGenerator
 {
@@ -14,7 +15,7 @@ namespace StrideSourceGenerator
         UsingDirectiveProvider UsingDirectiveProvider { get; set; } = new();
         public void Initialize(GeneratorInitializationContext context)
         {
-
+            //Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
 
         }
@@ -46,7 +47,8 @@ namespace StrideSourceGenerator
 
                 normalNamespace = UsingDirectiveProvider.AddUsingDirectives(normalNamespace);
                 
-                var DefaultSettings = AddMethodsToTheClass(className, ref partialClass,properties,className);
+                var inheritedProperties = propertyFinder.FilterInheritedProperties(classDeclaration,context);
+                var DefaultSettings = AddMethodsToTheClass(className, ref partialClass,properties,className,inheritedProperties);
 
                 partialClass = partialClass.AddMembers(DefaultSettings);
                 if (normalNamespace == null)
@@ -60,9 +62,9 @@ namespace StrideSourceGenerator
             }
         }
         private static WriterFactory writerFactory = new();
-        private static MemberDeclarationSyntax AddMethodsToTheClass(string className, ref ClassDeclarationSyntax partialClass, IEnumerable<PropertyDeclarationSyntax> properties, string serializerClassName)
+        private static MemberDeclarationSyntax AddMethodsToTheClass(string className, ref ClassDeclarationSyntax partialClass, IEnumerable<PropertyDeclarationSyntax> properties, string serializerClassName, IEnumerable<IPropertySymbol> inheritedProperties)
         {
-            var writeToDictionaryString = writerFactory.WriteToDictionaryTemplate(properties,serializerClassName);
+            var writeToDictionaryString = writerFactory.WriteToDictionaryTemplate(properties,serializerClassName,inheritedProperties);
             var writeToDictionaryMethod = SyntaxFactory.ParseMemberDeclaration(writeToDictionaryString);
             return writeToDictionaryMethod;
         }
