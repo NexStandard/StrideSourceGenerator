@@ -25,13 +25,14 @@ internal class WriterFactory
         {
             var propertyname = inheritedProperty.Name;
             var type = inheritedProperty.Type.Name;
-            if (SimpleTypes.Contains(type))
-            {
-                sb.Append( CreateSimpleType(propertyname, type));
-            }
-            else if(inheritedProperty.Type.TypeKind == TypeKind.Class)
+
+            if(inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
                 sb.Append($"propertiesDictionary[\"{propertyname}\"] = GeneratedSerializer{type}.WriteToDictionary(objToSerialize.{propertyname});");
+            }
+            else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
+            {
+                sb.Append($"propertiesDictionary[\"{propertyname}\"] = objToSerialize.{propertyname};");
             }
         }
         
@@ -39,10 +40,13 @@ internal class WriterFactory
         {
             var propertyName = property.Identifier.Text;
             var type = property.Type.ToString();
+
             if (SimpleTypes.Contains(type))
             {
                 sb.Append(CreateSimpleType(propertyName, type));
             }
+            
+
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
                 sb.Append($"propertiesDictionary[\"{propertyName}\"] = GeneratedSerializer{classIdentifier}.WriteToDictionary(objToSerialize.{propertyName});");
