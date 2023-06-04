@@ -15,7 +15,7 @@ namespace StrideSourceGenerator
         UsingDirectiveProvider UsingDirectiveProvider { get; set; } = new();
         public void Initialize(GeneratorInitializationContext context)
         {
-            //Debugger.Launch();
+         //   Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
 
         }

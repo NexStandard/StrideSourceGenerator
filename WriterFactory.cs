@@ -31,7 +31,7 @@ internal class WriterFactory
             }
             else if(inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
-                return $"propertiesDictionary[\"{propertyname}\"] = GeneratedSerializer{type}.WriteToDictionary(objToSerialize.{propertyname});";
+                sb.Append($"propertiesDictionary[\"{propertyname}\"] = GeneratedSerializer{type}.WriteToDictionary(objToSerialize.{propertyname});");
             }
         }
         

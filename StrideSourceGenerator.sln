@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrideSourceGenerator", "StrideSourceGenerator.csproj", "{11EE29C6-FAA4-4734-B9FC-1884F91857C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StrideSourceGenerator", "StrideSourceGenerator.csproj", "{11EE29C6-FAA4-4734-B9FC-1884F91857C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrideSourceGened", "..\StrideSourceGened\StrideSourceGened.csproj", "{081F7830-ADEA-4F27-854D-92587FCAC118}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StrideSourceGened", "..\StrideSourceGened\StrideSourceGened.csproj", "{081F7830-ADEA-4F27-854D-92587FCAC118}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

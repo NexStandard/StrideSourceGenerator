@@ -70,11 +70,12 @@ internal class PropertyAttributeFinder
     private IEnumerable<IPropertySymbol> FilterBasePropertiesRecursive(ref INamedTypeSymbol s)
     {
         var nextBaseType = s.BaseType;
-        var result = Enumerable.Empty<IPropertySymbol>();
+        var result = new List<IPropertySymbol>() ;
         if(s.BaseType != null)
         {
-            result = FilterBasePropertiesRecursive(ref nextBaseType);
+            result.Concat(FilterBasePropertiesRecursive(ref nextBaseType));
         }
-        return s.GetMembers().OfType<IPropertySymbol>().Concat(result);
+        var x = result.Concat(s.GetMembers().OfType<IPropertySymbol>().Where(s => s.GetMethod?.DeclaredAccessibility == Accessibility.Public));
+        return x;
     }
 }
