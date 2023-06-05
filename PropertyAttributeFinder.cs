@@ -67,15 +67,15 @@ internal class PropertyAttributeFinder
     /// </summary>
     /// <param name="currentBaseType">The base class which the ClassDeclarationSyntax has</param>
     /// <returns>All allowed Properties in any base class in the inheritance tree</returns>
-    private IEnumerable<IPropertySymbol> FilterBasePropertiesRecursive(ref INamedTypeSymbol s)
+    private IEnumerable<IPropertySymbol> FilterBasePropertiesRecursive(ref INamedTypeSymbol currentBaseType)
     {
-        var nextBaseType = s.BaseType;
+        var nextBaseType = currentBaseType.BaseType;
         var result = new List<IPropertySymbol>() ;
-        if(s.BaseType != null)
+        if(currentBaseType.BaseType != null)
         {
             result.Concat(FilterBasePropertiesRecursive(ref nextBaseType));
         }
-        var x = result.Concat(s.GetMembers().OfType<IPropertySymbol>().Where(s => s.GetMethod?.DeclaredAccessibility == Accessibility.Public));
-        return x;
+        var publicGetterProperties  = result.Concat(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(s => s.GetMethod?.DeclaredAccessibility == Accessibility.Public));
+        return publicGetterProperties;
     }
 }

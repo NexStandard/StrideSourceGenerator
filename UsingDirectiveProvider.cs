@@ -10,10 +10,8 @@ internal class UsingDirectiveProvider
 {
     List<String> allowedAttributes = new List<String>()
     {
-        " System.Xml.Serialization",
-        " System.Xml",
-        " Stride.Core",
-        " YamlDotNet.Serialization"
+        " YamlDotNet.Serialization",
+        " YamlDotNet.RepresentationModel"
     };
     public NamespaceDeclarationSyntax AddUsingDirectives(NamespaceDeclarationSyntax normalNamespace)
     {

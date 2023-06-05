@@ -20,20 +20,24 @@ internal class WriterFactory
     {
  
         StringBuilder sb = new StringBuilder();
-            sb.Append("if(objToSerialize is not null) { ");
         foreach(var inheritedProperty in symbols)
         {
             var propertyname = inheritedProperty.Name;
             var type = inheritedProperty.Type.Name;
-
-            if(inheritedProperty.Type.TypeKind == TypeKind.Class)
+            if (SimpleTypes.Contains(type))
             {
-                sb.Append($"propertiesDictionary[\"{propertyname}\"] = GeneratedSerializer{type}.WriteToDictionary(objToSerialize.{propertyname});");
+                sb.Append(CreateSimpleType(propertyname, type));
             }
-            else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
+            else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
-                sb.Append($"propertiesDictionary[\"{propertyname}\"] = objToSerialize.{propertyname};");
+                
+                sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), GeneratedSerializer{type}.ConvertToYaml(objToSerialize.{propertyname}),");
             }
+         //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
+         //   {
+         //       
+         //       sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), new YamlScalarNode(objToSerialize.{propertyname}),");
+         //   }
         }
         
         foreach (var property in properties)
@@ -49,21 +53,26 @@ internal class WriterFactory
 
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
-                sb.Append($"propertiesDictionary[\"{propertyName}\"] = GeneratedSerializer{classIdentifier}.WriteToDictionary(objToSerialize.{propertyName});");
+                sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyName})), GeneratedSerializer{type}.ConvertToYaml(objToSerialize.{propertyName}),");
             }
         }
-        sb.Append("}");
+
         return $$"""
-        public static Dictionary<object,object> WriteToDictionary({{className}} objToSerialize)
+        public static YamlMappingNode ConvertToYaml({{className}} objToSerialize)
         {
-        Dictionary<object,object> objectAsDictionary = new Dictionary<object,object>();
-        objectAsDictionary["$Type"] = typeof({{className}}).AssemblyQualifiedName;
-        var propertiesDictionary = new Dictionary<object,object>();
-        objectAsDictionary["$Attributes"] = propertiesDictionary;
-
-        {{sb}}
-
-        return objectAsDictionary;
+        if(objToSerialize is not null) { 
+        var mappedResult = new YamlMappingNode(
+            new YamlScalarNode("$Class"), new YamlScalarNode(nameof({{className}})),
+            {{sb}}
+            new YamlScalarNode("$Namespace"), new YamlScalarNode(typeof({{className}}).Namespace)
+        );
+        return mappedResult;
+        }
+        return new YamlMappingNode(
+            new YamlScalarNode("$Class"), new YamlScalarNode(nameof({{className}})),
+            new YamlScalarNode("$Namespace"), new YamlScalarNode(typeof({{className}}).Namespace),
+            new YamlScalarNode("$IsNull"), new YamlScalarNode("true")
+        );
         }
         """;
         
@@ -85,6 +94,6 @@ internal class WriterFactory
     };
     private string CreateSimpleType(string name, string type)
     {
-        return $"propertiesDictionary[\"{name}\"] = objToSerialize.{name};";
+        return $"new YamlScalarNode(nameof(objToSerialize.{name})), new YamlScalarNode(objToSerialize.{name}.ToString()),";
     }
 }
