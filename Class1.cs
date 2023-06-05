@@ -48,9 +48,9 @@ namespace StrideSourceGenerator
                 normalNamespace = UsingDirectiveProvider.AddUsingDirectives(normalNamespace);
                 
                 var inheritedProperties = propertyFinder.FilterInheritedProperties(classDeclaration,context);
-                var DefaultSettings = AddMethodsToTheClass(className, ref partialClass,properties,className,inheritedProperties);
+                AddMethodsToTheClass(className, ref partialClass,properties,className,inheritedProperties);
 
-                partialClass = partialClass.AddMembers(DefaultSettings);
+                partialClass = AddInterfaces(partialClass, className);
                 if (normalNamespace == null)
                     continue;
                 var compilationUnit = SyntaxFactory.CompilationUnit()
@@ -61,17 +61,24 @@ namespace StrideSourceGenerator
 
             }
         }
-        private static WriterFactory writerFactory = new();
-        private static MemberDeclarationSyntax AddMethodsToTheClass(string className, ref ClassDeclarationSyntax partialClass, IEnumerable<PropertyDeclarationSyntax> properties, string serializerClassName, IEnumerable<IPropertySymbol> inheritedProperties)
+        private static ConvertToYamlMethodFactory writerFactory = new();
+        private static SerializedTypePropertyFactory SerializedTypePropertyFactory = new ();
+        private static void AddMethodsToTheClass(string className, ref ClassDeclarationSyntax partialClass, IEnumerable<PropertyDeclarationSyntax> properties, string serializerClassName, IEnumerable<IPropertySymbol> inheritedProperties)
         {
             var writeToDictionaryString = writerFactory.WriteToDictionaryTemplate(properties,serializerClassName,inheritedProperties);
             var writeToDictionaryMethod = SyntaxFactory.ParseMemberDeclaration(writeToDictionaryString);
-            return writeToDictionaryMethod;
+            var serializedTypePropertyString = SerializedTypePropertyFactory.SerializedTypeProperty(properties, serializerClassName, inheritedProperties);
+            partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(serializedTypePropertyString));
+            partialClass = partialClass.AddMembers(writeToDictionaryMethod);
         }
 
         private static string GetClassName(ClassDeclarationSyntax classDeclaration)
         {
             return classDeclaration.Identifier.ValueText;
+        }
+        private static ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className)
+        {
+            return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlSerializer<{className}>")));
         }
     }
 

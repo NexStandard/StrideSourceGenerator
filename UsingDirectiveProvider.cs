@@ -10,12 +10,11 @@ internal class UsingDirectiveProvider
 {
     List<String> allowedAttributes = new List<String>()
     {
-        " YamlDotNet.Serialization",
         " YamlDotNet.RepresentationModel"
     };
     public NamespaceDeclarationSyntax AddUsingDirectives(NamespaceDeclarationSyntax normalNamespace)
     {
-        allowedAttributes.ForEach(x =>normalNamespace = normalNamespace.AddUsings( SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(x))));
+        allowedAttributes.ForEach(x =>normalNamespace = normalNamespace.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(x))));
 
         return normalNamespace;
     }

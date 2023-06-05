@@ -9,13 +9,8 @@ using System.Text;
 using System.Xml.Linq;
 
 namespace StrideSourceGenerator;
-internal class WriterFactory
+internal class ConvertToYamlMethodFactory
 {
-    public string Test(IEnumerable<PropertyDeclarationSyntax> properties, string className, List<IPropertySymbol> symbols)
-    {
-        return WriteToDictionaryTemplate(properties, className,symbols);
-
-    }
     public string WriteToDictionaryTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className,IEnumerable<IPropertySymbol> symbols)
     {
  
@@ -31,7 +26,7 @@ internal class WriterFactory
             else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
                 
-                sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), GeneratedSerializer{type}.ConvertToYaml(objToSerialize.{propertyname}),");
+                sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyname})), GeneratedSerializer{type}.ConvertToYaml(objToSerialize.{propertyname}));");
             }
          //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
          //   {
@@ -53,19 +48,22 @@ internal class WriterFactory
 
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
-                sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyName})), GeneratedSerializer{type}.ConvertToYaml(objToSerialize.{propertyName}),");
+                sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyName})), GeneratedSerializer{type}.ConvertToYaml(objToSerialize.{propertyName}));");
             }
         }
 
         return $$"""
-        public static YamlMappingNode ConvertToYaml({{className}} objToSerialize)
+        public YamlMappingNode ConvertToYaml({{className}} objToSerialize)
         {
         if(objToSerialize is not null) { 
         var mappedResult = new YamlMappingNode(
             new YamlScalarNode("$Class"), new YamlScalarNode(nameof({{className}})),
-            {{sb}}
+            
             new YamlScalarNode("$Namespace"), new YamlScalarNode(typeof({{className}}).Namespace)
         );
+
+        {{sb}}
+
         return mappedResult;
         }
         return new YamlMappingNode(
@@ -94,6 +92,6 @@ internal class WriterFactory
     };
     private string CreateSimpleType(string name, string type)
     {
-        return $"new YamlScalarNode(nameof(objToSerialize.{name})), new YamlScalarNode(objToSerialize.{name}.ToString()),";
+        return $"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{name})), new YamlScalarNode(objToSerialize.{name}.ToString()));";
     }
 }
