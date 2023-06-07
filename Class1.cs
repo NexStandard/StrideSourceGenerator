@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.Serialization;
 
 namespace StrideSourceGenerator
 {
@@ -19,13 +20,45 @@ namespace StrideSourceGenerator
             context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
 
         }
-        public static NamespaceDeclarationSyntax GetNamespaceFrom(SyntaxNode s) =>
-        s.Parent switch
+        public static NamespaceDeclarationSyntax GetNamespaceFrom(SyntaxNode s)
         {
-            NamespaceDeclarationSyntax namespaceDeclarationSyntax => namespaceDeclarationSyntax,
-            null => null,
-            _ => GetNamespaceFrom(s.Parent)
-        };
+            while (s != null)
+            {
+                if (s is FileScopedNamespaceDeclarationSyntax fileScopedNamespaceDeclarationSyntax)
+                {
+                    var newNamespaceDeclaration = SyntaxFactory.NamespaceDeclaration(
+                        fileScopedNamespaceDeclarationSyntax.AttributeLists,
+                        fileScopedNamespaceDeclarationSyntax.Modifiers,
+                        fileScopedNamespaceDeclarationSyntax.NamespaceKeyword,
+                        fileScopedNamespaceDeclarationSyntax.Name,
+                        SyntaxFactory.Token(SyntaxKind.OpenBraceToken).WithTrailingTrivia(fileScopedNamespaceDeclarationSyntax.SemicolonToken.TrailingTrivia),
+                        fileScopedNamespaceDeclarationSyntax.Externs,
+                        fileScopedNamespaceDeclarationSyntax.Usings,
+                        fileScopedNamespaceDeclarationSyntax.Members,
+                        SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
+                        semicolonToken: default);
+
+                    return newNamespaceDeclaration;
+                }
+                else if (s is NamespaceDeclarationSyntax namespaceDeclarationSyntax)
+                {
+                    return namespaceDeclarationSyntax;
+                }
+
+                s = s.Parent;
+            }
+
+            return null;
+        }
+        /*
+public static NamespaceDeclarationSyntax GetNamespaceFrom(SyntaxNode s) =>
+s.Parent switch
+{
+    NamespaceDeclarationSyntax namespaceDeclarationSyntax => namespaceDeclarationSyntax,
+    null => null,
+    _ => GetNamespaceFrom(s.Parent)
+};
+*/
 
         public void Execute(GeneratorExecutionContext context)
         {
@@ -78,7 +111,8 @@ namespace StrideSourceGenerator
         }
         private static ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className)
         {
-            return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlSerializer<{className}>")));
+            return partialClass;
+     //       return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlSerializer<{className}>")));
         }
     }
 
