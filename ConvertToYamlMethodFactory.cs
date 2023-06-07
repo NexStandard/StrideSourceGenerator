@@ -26,7 +26,7 @@ internal class ConvertToYamlMethodFactory
             else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
                 
-                sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyname})), GeneratedSerializer{type}.ConvertToYaml(objToSerialize.{propertyname}));");
+                sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyname})), new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyname}));");
             }
          //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
          //   {
@@ -48,7 +48,7 @@ internal class ConvertToYamlMethodFactory
 
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
-                sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyName})), GeneratedSerializer{type}.ConvertToYaml(objToSerialize.{propertyName}));");
+                sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyName})), new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyName}));");
             }
         }
 
@@ -57,20 +57,16 @@ internal class ConvertToYamlMethodFactory
         {
         if(objToSerialize is not null) { 
         var mappedResult = new YamlMappingNode(
-            new YamlScalarNode("$Class"), new YamlScalarNode(nameof({{className}})),
+            //         new YamlScalarNode("$Class"), new YamlScalarNode(nameof({{className}})),
             
-            new YamlScalarNode("$Namespace"), new YamlScalarNode(typeof({{className}}).Namespace)
+            //         new YamlScalarNode("$Namespace"), new YamlScalarNode(typeof({{className}}).Namespace)
         );
 
         {{sb}}
 
         return mappedResult;
         }
-        return new YamlMappingNode(
-            new YamlScalarNode("$Class"), new YamlScalarNode(nameof({{className}})),
-            new YamlScalarNode("$Namespace"), new YamlScalarNode(typeof({{className}}).Namespace),
-            new YamlScalarNode("$IsNull"), new YamlScalarNode("true")
-        );
+        return new YamlMappingNode();
         }
         """;
         
