@@ -10,7 +10,7 @@ internal class UsingDirectiveProvider
 {
     List<String> allowedAttributes = new List<String>()
     {
-        " Stride.Core.YamlDotNet",
+        //" Stride.Core.YamlDotNet",
         " YamlDotNet.RepresentationModel"
     };
     public NamespaceDeclarationSyntax AddUsingDirectives(NamespaceDeclarationSyntax normalNamespace)
