@@ -16,7 +16,7 @@ namespace StrideSourceGenerator
         UsingDirectiveProvider UsingDirectiveProvider { get; set; } = new();
         public void Initialize(GeneratorInitializationContext context)
         {
-         //   Debugger.Launch();
+          Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
 
         }
@@ -37,11 +37,20 @@ namespace StrideSourceGenerator
                         fileScopedNamespaceDeclarationSyntax.Members,
                         SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
                         semicolonToken: default);
-
+                    var classes = newNamespaceDeclaration.DescendantNodes().OfType<ClassDeclarationSyntax>();
+                    foreach (var classDeclarationNode in classes)
+                    {
+                        newNamespaceDeclaration = newNamespaceDeclaration.RemoveNode(classDeclarationNode, SyntaxRemoveOptions.KeepNoTrivia);
+                    }
                     return newNamespaceDeclaration;
                 }
                 else if (s is NamespaceDeclarationSyntax namespaceDeclarationSyntax)
                 {
+                    var classes =namespaceDeclarationSyntax.DescendantNodes().OfType<ClassDeclarationSyntax>();
+                    foreach (var classDeclarationNode in classes )
+                    {
+                        namespaceDeclarationSyntax = namespaceDeclarationSyntax.RemoveNode(classDeclarationNode, SyntaxRemoveOptions.KeepNoTrivia);
+                    }
                     return namespaceDeclarationSyntax;
                 }
 
@@ -76,7 +85,7 @@ s.Parent switch
 
                 var normalNamespace = GetNamespaceFrom(classDeclaration);
                 // without this line, everything breaks apart
-                normalNamespace = normalNamespace.RemoveNode(classDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
+               //  normalNamespace = normalNamespace.RemoveNode(classDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
 
                 normalNamespace = UsingDirectiveProvider.AddUsingDirectives(normalNamespace);
                 
