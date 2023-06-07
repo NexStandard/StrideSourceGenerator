@@ -22,8 +22,12 @@ internal class ClassAttributeFinder
                 var attribute = classDeclaration.AttributeLists
                     .SelectMany(al => al.Attributes)
                     .FirstOrDefault(a => allowedAttributes.Contains(a.Name.ToString()));
-                
+
+                if (attribute != null)
+                {
                     return classDeclaration;
+                }
+                break;
         }
         return null;
     }
