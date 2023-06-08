@@ -57,9 +57,9 @@ internal class ConvertToYamlMethodFactory
         {
         if(objToSerialize is not null) { 
         var mappedResult = new YamlMappingNode(
-            new YamlScalarNode("$Assembly"), typeof({{className}}).AssemblyQualifiedName.ToString(),
+         //   new YamlScalarNode("$Assembly"), typeof({{className}}).AssemblyQualifiedName.ToString(),
             
-            new YamlScalarNode("$Namespace"), typeof({{className}}).Namespace
+         //   new YamlScalarNode("$Namespace"), typeof({{className}}).Namespace
         )
         {
             Tag = "!" + typeof({{className}}).ToString()

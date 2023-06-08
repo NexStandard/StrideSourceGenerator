@@ -26,6 +26,7 @@ namespace StrideSourceGenerator
             {
                 if (s is FileScopedNamespaceDeclarationSyntax fileScopedNamespaceDeclarationSyntax)
                 {
+                    /*
                     var newNamespaceDeclaration = SyntaxFactory.NamespaceDeclaration(
                         fileScopedNamespaceDeclarationSyntax.AttributeLists,
                         fileScopedNamespaceDeclarationSyntax.Modifiers,
@@ -42,7 +43,8 @@ namespace StrideSourceGenerator
                     {
                         newNamespaceDeclaration = newNamespaceDeclaration.RemoveNode(classDeclarationNode, SyntaxRemoveOptions.KeepNoTrivia);
                     }
-                    return newNamespaceDeclaration;
+                    */
+                    return CreateNormalNamespace(fileScopedNamespaceDeclarationSyntax);;
                 }
                 else if (s is NamespaceDeclarationSyntax namespaceDeclarationSyntax)
                 {
@@ -59,6 +61,12 @@ namespace StrideSourceGenerator
 
             return null;
         }
+        public static NamespaceDeclarationSyntax CreateNormalNamespace(FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
+        {
+            var name = fileScopedNamespace.Name;
+            return SyntaxFactory.NamespaceDeclaration(name);
+        }
+
         /*
 public static NamespaceDeclarationSyntax GetNamespaceFrom(SyntaxNode s) =>
 s.Parent switch
