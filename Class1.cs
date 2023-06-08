@@ -20,61 +20,6 @@ namespace StrideSourceGenerator
             context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
 
         }
-        public static NamespaceDeclarationSyntax GetNamespaceFrom(SyntaxNode s)
-        {
-            while (s != null)
-            {
-                if (s is FileScopedNamespaceDeclarationSyntax fileScopedNamespaceDeclarationSyntax)
-                {
-                    /*
-                    var newNamespaceDeclaration = SyntaxFactory.NamespaceDeclaration(
-                        fileScopedNamespaceDeclarationSyntax.AttributeLists,
-                        fileScopedNamespaceDeclarationSyntax.Modifiers,
-                        fileScopedNamespaceDeclarationSyntax.NamespaceKeyword,
-                        fileScopedNamespaceDeclarationSyntax.Name,
-                        SyntaxFactory.Token(SyntaxKind.OpenBraceToken).WithTrailingTrivia(fileScopedNamespaceDeclarationSyntax.SemicolonToken.TrailingTrivia),
-                        fileScopedNamespaceDeclarationSyntax.Externs,
-                        fileScopedNamespaceDeclarationSyntax.Usings,
-                        fileScopedNamespaceDeclarationSyntax.Members,
-                        SyntaxFactory.Token(SyntaxKind.CloseBraceToken),
-                        semicolonToken: default);
-                    var classes = newNamespaceDeclaration.DescendantNodes().OfType<ClassDeclarationSyntax>();
-                    foreach (var classDeclarationNode in classes)
-                    {
-                        newNamespaceDeclaration = newNamespaceDeclaration.RemoveNode(classDeclarationNode, SyntaxRemoveOptions.KeepNoTrivia);
-                    }
-                    */
-                    return CreateNormalNamespaceFromFileScopedNamespace(fileScopedNamespaceDeclarationSyntax);;
-                }
-                else if (s is NamespaceDeclarationSyntax namespaceDeclarationSyntax)
-                {
-                    return CreateNormalNamespaceFromNormalNamespace(namespaceDeclarationSyntax);;
-                }
-
-                s = s.Parent;
-            }
-
-            return null;
-        }
-        public static NamespaceDeclarationSyntax CreateNormalNamespaceFromFileScopedNamespace(FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
-        {
-            var name = fileScopedNamespace.Name;
-            return SyntaxFactory.NamespaceDeclaration(name);
-        }
-        public static NamespaceDeclarationSyntax CreateNormalNamespaceFromNormalNamespace(NamespaceDeclarationSyntax normalNamespace)
-        {
-            var name = normalNamespace.Name;
-            return SyntaxFactory.NamespaceDeclaration(name);
-        }
-        /*
-public static NamespaceDeclarationSyntax GetNamespaceFrom(SyntaxNode s) =>
-s.Parent switch
-{
-    NamespaceDeclarationSyntax namespaceDeclarationSyntax => namespaceDeclarationSyntax,
-    null => null,
-    _ => GetNamespaceFrom(s.Parent)
-};
-*/
 
         public void Execute(GeneratorExecutionContext context)
         {
@@ -90,7 +35,7 @@ s.Parent switch
                 var partialClass = SyntaxFactory.ClassDeclaration(serializerClassName)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword));
 
-                var normalNamespace = GetNamespaceFrom(classDeclaration);
+                var normalNamespace = NamespaceProvider.GetNamespaceFromSyntaxNode(classDeclaration);
                 // without this line, everything breaks apart
                //  normalNamespace = normalNamespace.RemoveNode(classDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
 
