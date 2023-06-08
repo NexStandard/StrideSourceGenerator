@@ -44,16 +44,11 @@ namespace StrideSourceGenerator
                         newNamespaceDeclaration = newNamespaceDeclaration.RemoveNode(classDeclarationNode, SyntaxRemoveOptions.KeepNoTrivia);
                     }
                     */
-                    return CreateNormalNamespace(fileScopedNamespaceDeclarationSyntax);;
+                    return CreateNormalNamespaceFromFileScopedNamespace(fileScopedNamespaceDeclarationSyntax);;
                 }
                 else if (s is NamespaceDeclarationSyntax namespaceDeclarationSyntax)
                 {
-                    var classes =namespaceDeclarationSyntax.DescendantNodes().OfType<ClassDeclarationSyntax>();
-                    foreach (var classDeclarationNode in classes )
-                    {
-                        namespaceDeclarationSyntax = namespaceDeclarationSyntax.RemoveNode(classDeclarationNode, SyntaxRemoveOptions.KeepNoTrivia);
-                    }
-                    return namespaceDeclarationSyntax;
+                    return CreateNormalNamespaceFromNormalNamespace(namespaceDeclarationSyntax);;
                 }
 
                 s = s.Parent;
@@ -61,12 +56,16 @@ namespace StrideSourceGenerator
 
             return null;
         }
-        public static NamespaceDeclarationSyntax CreateNormalNamespace(FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
+        public static NamespaceDeclarationSyntax CreateNormalNamespaceFromFileScopedNamespace(FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
         {
             var name = fileScopedNamespace.Name;
             return SyntaxFactory.NamespaceDeclaration(name);
         }
-
+        public static NamespaceDeclarationSyntax CreateNormalNamespaceFromNormalNamespace(NamespaceDeclarationSyntax normalNamespace)
+        {
+            var name = normalNamespace.Name;
+            return SyntaxFactory.NamespaceDeclaration(name);
+        }
         /*
 public static NamespaceDeclarationSyntax GetNamespaceFrom(SyntaxNode s) =>
 s.Parent switch
