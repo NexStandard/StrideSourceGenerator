@@ -6,6 +6,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
+using System.IO;
+using System.Runtime.InteropServices.ComTypes;
+using StrideSourceGenerator.HelperClasses.Namespace;
 
 namespace StrideSourceGenerator
 {
@@ -13,14 +16,13 @@ namespace StrideSourceGenerator
     public class BFNNexSourceGenerator : ISourceGenerator
     {
         PropertyAttributeFinder propertyFinder = new();
-        UsingDirectiveProvider UsingDirectiveProvider { get; set; } = new();
         public void Initialize(GeneratorInitializationContext context)
         {
          // Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
-
         }
 
+        private NamespaceCreator NamespaceCreator { get; set; } = new();
         public void Execute(GeneratorExecutionContext context)
         {
 
@@ -35,11 +37,13 @@ namespace StrideSourceGenerator
                 var partialClass = SyntaxFactory.ClassDeclaration(serializerClassName)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword));
 
-                var normalNamespace = NamespaceProvider.GetNamespaceFromSyntaxNode(classDeclaration);
-                // without this line, everything breaks apart
-               //  normalNamespace = normalNamespace.RemoveNode(classDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
+                NamespaceDeclarationSyntax normalNamespace = NamespaceCreator.CreateNamespace(classDeclaration,context,className);
+                if(normalNamespace == null)
+                {
+                    continue;
+                }
 
-                normalNamespace = UsingDirectiveProvider.AddUsingDirectives(normalNamespace);
+                string namespaceName = normalNamespace.Name.ToString();
                 
                 var inheritedProperties = propertyFinder.FilterInheritedProperties(classDeclaration,context);
                 AddMethodsToTheClass(className, ref partialClass,properties,className,inheritedProperties);
@@ -49,9 +53,10 @@ namespace StrideSourceGenerator
                     continue;
                 var compilationUnit = SyntaxFactory.CompilationUnit()
                                                       .AddMembers(normalNamespace.AddMembers(partialClass));
+
                 var sourceText = compilationUnit.NormalizeWhitespace().ToFullString();
 
-                context.AddSource($"{serializerClassName}.g.cs", sourceText);
+                context.AddSource($"{serializerClassName}_{namespaceName}.g.cs", sourceText);
 
             }
         }
