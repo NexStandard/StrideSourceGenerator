@@ -27,20 +27,20 @@ public class NamespaceProvider
         if (namespaceDeclaration == null) return null;
         if(namespaceDeclaration is FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
         {
-            return Create(fileScopedNamespace);
+            return CreateFileScopedNamespace(fileScopedNamespace);
         }
         if(namespaceDeclaration is NamespaceDeclarationSyntax normalNamespace)
         {
-            return Create(normalNamespace);
+            return CreateNormalNamespace(normalNamespace);
         }
         return null;
     }
-    private static NamespaceDeclarationSyntax Create(FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
+    private NamespaceDeclarationSyntax CreateFileScopedNamespace(FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
     {
         var name = fileScopedNamespace.Name;
         return SyntaxFactory.NamespaceDeclaration(name);
     }
-    private static NamespaceDeclarationSyntax Create(NamespaceDeclarationSyntax normalNamespace)
+    private NamespaceDeclarationSyntax CreateNormalNamespace(NamespaceDeclarationSyntax normalNamespace)
     {
         var name = normalNamespace.Name;
         return SyntaxFactory.NamespaceDeclaration(name);
