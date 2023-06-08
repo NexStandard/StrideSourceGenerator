@@ -22,6 +22,12 @@ internal class UsingDirectiveProvider
             MetadataName = "YamlDotNet.RepresentationModel",
             NugetReference = "<ProjectReference Include=\"..\\NexStandard\\YamlDotNet\\YamlDotNet\\YamlDotNet.csproj\"/>",
             HelpLink = "https://stride-docs-test.azurewebsites.net/latest"
+        },
+        new UsingDirective() {
+            Name = " System.Linq",
+            MetadataName = "System.Linq",
+            NugetReference = "",
+            HelpLink = ""
         }
         //" Stride.Core.YamlDotNet",
         

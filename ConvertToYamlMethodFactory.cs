@@ -62,7 +62,7 @@ internal class ConvertToYamlMethodFactory
          //   new YamlScalarNode("$Namespace"), typeof({{className}}).Namespace
         )
         {
-            Tag = "!" + typeof({{className}}).ToString()
+            Tag = "!{{className}}"
         }
         ;
 
