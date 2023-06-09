@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.IO;
 using System.Runtime.InteropServices.ComTypes;
 using StrideSourceGenerator.HelperClasses.Namespace;
+using StrideSourceGenerator.HelperClasses.Methods;
 
 namespace StrideSourceGenerator
 {
@@ -81,6 +82,7 @@ namespace StrideSourceGenerator
         {
             var writeToDictionaryString = writerFactory.WriteToDictionaryTemplate(properties,serializerClassName,inheritedProperties);
             var deserializerMethodString = DeserializeMethodFactory.DeserializeMethodTemplate(properties, serializerClassName,inheritedProperties);
+            var deserializerManyMethodString = DeserializeMethodFactory.DeserializeManyMethodTemplate(properties, serializerClassName,inheritedProperties);
             var deserializerFromYamlMappingNodeString = DeserializeMethodFactory.DeserializeFromYamlMappingNodeTemplate(properties, serializerClassName,inheritedProperties);
             var writeToDictionaryMethod = SyntaxFactory.ParseMemberDeclaration(writeToDictionaryString);
             var deserializeFromYamlMappingNodeMethod = SyntaxFactory.ParseMemberDeclaration(deserializerFromYamlMappingNodeString);
@@ -89,7 +91,7 @@ namespace StrideSourceGenerator
             var identifierTypeString = IdentifierTypeFactory.IdentifierTagTemplate(properties,serializerClassName, inheritedProperties);
             partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTypeString));
             partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTagString));
-            
+            partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(deserializerManyMethodString));
             partialClass = partialClass.AddMembers(writeToDictionaryMethod);
             partialClass = partialClass.AddMembers(deserializeFromYamlMappingNodeMethod);
             partialClass = partialClass.AddMembers(deserializeMethod);
@@ -101,7 +103,6 @@ namespace StrideSourceGenerator
         }
         private static ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className)
         {
-            
             return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlSerializer<{className}>")));
         }
         // from manio143 MIT License

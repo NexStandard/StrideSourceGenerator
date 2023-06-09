@@ -6,7 +6,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace StrideSourceGenerator.HelperClasses.Namespace;
-public sealed class NamespaceProvider
+sealed class NamespaceProvider
 {
     /// <summary>
     /// Finds either the Normalnamespace or the Filescoped namespace from a syntaxnode by looping over the parents.

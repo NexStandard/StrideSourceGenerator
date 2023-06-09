@@ -8,14 +8,14 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml.Linq;
 
-namespace StrideSourceGenerator;
+namespace StrideSourceGenerator.HelperClasses.Methods;
 internal class ConvertToYamlMethodFactory
 {
-    public string WriteToDictionaryTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className,IEnumerable<IPropertySymbol> symbols)
+    public string WriteToDictionaryTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
     {
- 
+
         StringBuilder sb = new StringBuilder();
-        foreach(var inheritedProperty in symbols)
+        foreach (var inheritedProperty in symbols)
         {
             var propertyname = inheritedProperty.Name;
             var type = inheritedProperty.Type.Name;
@@ -25,16 +25,16 @@ internal class ConvertToYamlMethodFactory
             }
             else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
-                
+
                 sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyname})), new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyname}));");
             }
-         //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
-         //   {
-         //       
-         //       sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), new YamlScalarNode(objToSerialize.{propertyname}),");
-         //   }
+            //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
+            //   {
+            //       
+            //       sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), new YamlScalarNode(objToSerialize.{propertyname}),");
+            //   }
         }
-        
+
         foreach (var property in properties)
         {
             var propertyName = property.Identifier.Text;
@@ -44,7 +44,7 @@ internal class ConvertToYamlMethodFactory
             {
                 sb.Append(CreateSimpleType(propertyName, type));
             }
-            
+
 
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
@@ -68,10 +68,10 @@ internal class ConvertToYamlMethodFactory
         return new YamlMappingNode();
         }
         """;
-        
+
     }
 
-    private List<string> SimpleTypes = new ()
+    private List<string> SimpleTypes = new()
     {
         "int",
         "Int32",
@@ -87,7 +87,7 @@ internal class ConvertToYamlMethodFactory
     };
     private string CreateSimpleType(string name, string type)
     {
-        if(type == "string" ||  type == "String")
+        if (type == "string" || type == "String")
         {
             return $"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{name})), objToSerialize.{name});";
         }

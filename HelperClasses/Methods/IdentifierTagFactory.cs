@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StrideSourceGenerator;
+namespace StrideSourceGenerator.HelperClasses.Methods;
 internal class IdentifierTagFactory
 {
     public string IdentifierTagTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using System.Threading;
 
 namespace StrideSourceGenerator.HelperClasses.Namespace;
-internal class UsingDirectiveProvider
+class UsingDirectiveProvider
 {
     // TODO: replace links with real error pages.
     List<UsingDirective> allowedAttributes = new List<UsingDirective>()

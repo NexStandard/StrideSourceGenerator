@@ -6,24 +6,43 @@ using System.Text;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace StrideSourceGenerator;
+namespace StrideSourceGenerator.HelperClasses.Methods;
 internal class DeserializeMethodFactory
 {
-    public string DeserializeMethodTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
+    public string DeserializeManyMethodTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
     {
         return $$"""
-        public IEnumerable<{{className}}> Deserialize(TextReader reader)
+        public IEnumerable<{{className}}> DeserializeMany(TextReader reader)
         {
             YamlStream stream = new YamlStream();
             stream.Load(reader);
             List<YamlDocument> documents = stream.Documents;
             if(documents is null)
                 yield break;
+            if(documents.Count == 0)
+                yield break;
 
             for(int i = 0; i< documents.Count;i++)
             {
                  yield return Deserialize((YamlMappingNode)documents[i].RootNode);
             }
+        }
+        """;
+
+    }
+    public string DeserializeMethodTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
+    {
+        return $$"""
+        public {{className}} Deserialize(TextReader reader)
+        {
+            YamlStream stream = new YamlStream();
+            stream.Load(reader);
+            List<YamlDocument> documents = stream.Documents;
+            if(documents is null)
+                return null;
+            if(documents.Count == 0)
+                return null;
+            return Deserialize((YamlMappingNode)documents[0].RootNode;
         }
         """;
 
@@ -42,7 +61,7 @@ internal class DeserializeMethodFactory
             else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
 
-                 sb.Append($"{propertyname} = new GeneratedSerializer{type}().DeserializeFromYamlNode(dictionaryDocument[\"{propertyname}\"]),");
+                sb.Append($"{propertyname} = new GeneratedSerializer{type}().DeserializeFromYamlNode(dictionaryDocument[\"{propertyname}\"]),");
             }
             //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
             //   {
@@ -101,9 +120,9 @@ internal class DeserializeMethodFactory
     };
     private string CreateSimpleType(string name, string type)
     {
-        if(type == "int" ||  type == "Int32")
-            return $"{name} =  Int32.Parse(((YamlScalarNode)dictionaryDocument[\"{ name}\"]).Value),";
-        if(type == "string" || type == "String")
+        if (type == "int" || type == "Int32")
+            return $"{name} =  Int32.Parse(((YamlScalarNode)dictionaryDocument[\"{name}\"]).Value),";
+        if (type == "string" || type == "String")
             return $"{name} =  dictionaryDocument[\"{name}\"].ToString(),";
         // TODO: this is wrong, the other types need to get implemented
         return $"{name} =  Int32.Parse(((YamlScalarNode)dictionaryDocument[\"{name}\"]).Value),";
