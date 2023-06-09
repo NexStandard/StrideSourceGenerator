@@ -18,12 +18,12 @@ internal class DeserializeMethodFactory
             stream.Load(reader);
             List<YamlDocument> documents = stream.Documents;
             if(documents is null)
-                Enumerable.Empty<{{className}}>();
+                yield break;
             List<{{className}}> result = new List<{{className}}>(documents.Count);
 
             for(int i = 0; i< documents.Count;i++)
             {
-                 result.Add(Deserialize((YamlMappingNode)documents[i].RootNode));
+                 yield return Deserialize((YamlMappingNode)documents[i].RootNode);
             }
             return result;
         }
