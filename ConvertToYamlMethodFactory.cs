@@ -56,15 +56,10 @@ internal class ConvertToYamlMethodFactory
         public YamlMappingNode ConvertToYaml({{className}} objToSerialize)
         {
         if(objToSerialize is not null) { 
-        var mappedResult = new YamlMappingNode(
-         //   new YamlScalarNode("$Assembly"), typeof({{className}}).AssemblyQualifiedName.ToString(),
-            
-         //   new YamlScalarNode("$Namespace"), typeof({{className}}).Namespace
-        )
+        var mappedResult = new YamlMappingNode()
         {
             Tag = "!{{className}}"
-        }
-        ;
+        };
 
         {{sb}}
 
@@ -92,6 +87,10 @@ internal class ConvertToYamlMethodFactory
     };
     private string CreateSimpleType(string name, string type)
     {
+        if(type == "string" ||  type == "String")
+        {
+            return $"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{name})), objToSerialize.{name});";
+        }
         return $"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{name})), objToSerialize.{name}.ToString());";
     }
 }
