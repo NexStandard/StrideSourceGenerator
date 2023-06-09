@@ -75,7 +75,8 @@ namespace StrideSourceGenerator
         }
         private static ConvertToYamlMethodFactory writerFactory = new();
         private static DeserializeMethodFactory DeserializeMethodFactory = new();
-        private static SerializedTypePropertyFactory SerializedTypePropertyFactory = new ();
+        private static IdentifierTagFactory SerializedTypePropertyFactory = new ();
+        private static IdentifierTypeFactory IdentifierTypeFactory = new ();
         private static void AddMethodsToTheClass(string className, ref ClassDeclarationSyntax partialClass, IEnumerable<PropertyDeclarationSyntax> properties, string serializerClassName, IEnumerable<IPropertySymbol> inheritedProperties)
         {
             var writeToDictionaryString = writerFactory.WriteToDictionaryTemplate(properties,serializerClassName,inheritedProperties);
@@ -84,8 +85,11 @@ namespace StrideSourceGenerator
             var writeToDictionaryMethod = SyntaxFactory.ParseMemberDeclaration(writeToDictionaryString);
             var deserializeFromYamlMappingNodeMethod = SyntaxFactory.ParseMemberDeclaration(deserializerFromYamlMappingNodeString);
             var deserializeMethod = SyntaxFactory.ParseMemberDeclaration(deserializerMethodString);
-            var serializedTypePropertyString = SerializedTypePropertyFactory.SerializedTypeProperty(properties, serializerClassName, inheritedProperties);
-            partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(serializedTypePropertyString));
+            var identifierTagString = SerializedTypePropertyFactory.IdentifierTagTemplate(properties, serializerClassName, inheritedProperties);
+            var identifierTypeString = IdentifierTypeFactory.IdentifierTagTemplate(properties,serializerClassName, inheritedProperties);
+            partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTypeString));
+            partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTagString));
+            
             partialClass = partialClass.AddMembers(writeToDictionaryMethod);
             partialClass = partialClass.AddMembers(deserializeFromYamlMappingNodeMethod);
             partialClass = partialClass.AddMembers(deserializeMethod);
@@ -97,8 +101,8 @@ namespace StrideSourceGenerator
         }
         private static ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className)
         {
-            return partialClass;
-     //       return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlSerializer<{className}>")));
+            
+            return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlSerializer<{className}>")));
         }
         // from manio143 MIT License
         public const string CompilerServicesDiagnosticIdFormat = "STR0{0:000}";
