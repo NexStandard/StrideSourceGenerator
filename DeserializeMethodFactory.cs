@@ -75,7 +75,7 @@ internal class DeserializeMethodFactory
             if(node is null)
                 return null;
 
-            var dictionaryDocument = node.ToDictionary(y => y.Key.ToString(), x => x.Value);
+            var dictionaryDocument = node.Children;
             if(dictionaryDocument.Count == 0)
                 return null;
             {{className}} result = new {{className}}()
@@ -104,11 +104,11 @@ internal class DeserializeMethodFactory
     private string CreateSimpleType(string name, string type)
     {
         if(type == "int" ||  type == "Int32")
-            return $"{name} =  Int32.Parse(dictionaryDocument[\"{ name}\"].ToString()),";
+            return $"{name} =  Int32.Parse(((YamlScalarNode)dictionaryDocument[\"{ name}\"]).Value),";
         if(type == "string" || type == "String")
             return $"{name} =  dictionaryDocument[\"{name}\"].ToString(),";
         // TODO: this is wrong, the other types need to get implemented
-        return $"{name} =  Int32.Parse(dictionaryDocument[\"{name}\"].ToString()),";
+        return $"{name} =  Int32.Parse(((YamlScalarNode)dictionaryDocument[\"{name}\"]).Value),";
     }
 
 }
