@@ -19,13 +19,11 @@ internal class DeserializeMethodFactory
             List<YamlDocument> documents = stream.Documents;
             if(documents is null)
                 yield break;
-            List<{{className}}> result = new List<{{className}}>(documents.Count);
 
             for(int i = 0; i< documents.Count;i++)
             {
                  yield return Deserialize((YamlMappingNode)documents[i].RootNode);
             }
-            return result;
         }
         """;
 
