@@ -10,11 +10,11 @@ using StrideSourceGenerator.HelperClasses.Properties;
 using System.Linq;
 
 namespace StrideSourceGenerator.HelperClasses.GeneratorCreators;
-internal class GeneratorClass : GeneratorBase
+internal class GeneratorClass : GeneratorBase<ClassDeclarationSyntax>
 {
-    public void CreateGeneratorForClasses(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration, BFNNexSyntaxReceiver syntaxReceiver)
+    public override void CreateGenerator(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration, BFNNexSyntaxReceiver syntaxReceiver)
     {
-        var className = GetClassName(classDeclaration);
+        var className = GetIdentifierName(classDeclaration);
         // Retrieve the properties of the class, needs to be filtered to DataContract
         var properties = propertyFinder.FilterProperties(context, classDeclaration.Members.OfType<PropertyDeclarationSyntax>());
 
@@ -78,4 +78,5 @@ internal class GeneratorClass : GeneratorBase
         partialClass = partialClass.AddMembers(deserializeFromYamlMappingNodeMethod);
         partialClass = partialClass.AddMembers(deserializeMethod);
     }
+
 }

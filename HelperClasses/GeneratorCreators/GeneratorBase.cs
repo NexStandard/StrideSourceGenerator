@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using StrideSourceGenerator.HelperClasses.Methods;
 using StrideSourceGenerator.HelperClasses.Namespace;
@@ -7,13 +8,16 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace StrideSourceGenerator.HelperClasses.GeneratorCreators;
-internal class GeneratorBase
+internal abstract class GeneratorBase<T>
+    where T : TypeDeclarationSyntax
 {
     protected IdentifierTagFactory SerializedTypePropertyFactory = new();
     protected IdentifierTypeFactory IdentifierTypeFactory = new();
     protected NamespaceCreator NamespaceCreator { get; } = new();
-    
-    protected string GetClassName(ClassDeclarationSyntax classDeclaration)
+
+    public abstract void CreateGenerator(GeneratorExecutionContext context, T partialClass, BFNNexSyntaxReceiver syntaxReceiver);
+
+    protected string GetIdentifierName(T classDeclaration)
     {
         return classDeclaration.Identifier.ValueText;
     }

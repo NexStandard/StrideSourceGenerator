@@ -32,7 +32,7 @@ namespace StrideSourceGenerator
                 
                 foreach (var classDeclaration in syntaxReceiver.ClassDeclarations)
                 {
-                    classGenerator.CreateGeneratorForClasses(context, classDeclaration,syntaxReceiver);
+                    classGenerator.CreateGenerator(context, classDeclaration,syntaxReceiver);
                 }
                 foreach(var structDeclaration in syntaxReceiver.StructDeclarations)
                 {
