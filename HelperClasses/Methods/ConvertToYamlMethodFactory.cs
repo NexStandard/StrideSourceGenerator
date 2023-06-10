@@ -11,7 +11,13 @@ using System.Xml.Linq;
 namespace StrideSourceGenerator.HelperClasses.Methods;
 internal class ConvertToYamlMethodFactory
 {
-    public string WriteToDictionaryTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
+    public List<string> PrivateProperties { get; set; } = new List<string>();
+    public void Add(string name)
+    {
+        // TODO : static until SerializerRegistry works
+        PrivateProperties.Add($"private static YamlScalarNode {name} = new YamlScalarNode(\"{name}\");");
+    }
+    public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
     {
 
         StringBuilder sb = new StringBuilder();
@@ -22,11 +28,13 @@ internal class ConvertToYamlMethodFactory
             if (SimpleTypes.Contains(type))
             {
                 sb.Append(CreateSimpleType(propertyname, type));
+                Add(propertyname);
             }
             else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
 
-                sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyname})), new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyname}));");
+                sb.Append($"mappedResult.Add({propertyname}, new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyname}));");
+                Add(propertyname);
             }
             //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
             //   {
@@ -43,12 +51,14 @@ internal class ConvertToYamlMethodFactory
             if (SimpleTypes.Contains(type))
             {
                 sb.Append(CreateSimpleType(propertyName, type));
+                Add(propertyName);
             }
 
 
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
-                sb.Append($"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{propertyName})), new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyName}));");
+                sb.Append($"mappedResult.Add({propertyName}, new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyName}));");
+                Add(propertyName);
             }
         }
 
@@ -89,8 +99,8 @@ internal class ConvertToYamlMethodFactory
     {
         if (type == "string" || type == "String")
         {
-            return $"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{name})), objToSerialize.{name});";
+            return $"mappedResult.Add({name}, objToSerialize.{name});";
         }
-        return $"mappedResult.Add(new YamlScalarNode(nameof(objToSerialize.{name})), objToSerialize.{name}.ToString());";
+        return $"mappedResult.Add({name}, objToSerialize.{name}.ToString());";
     }
 }

@@ -42,7 +42,7 @@ internal class DeserializeMethodFactory
                 return null;
             if(documents.Count == 0)
                 return null;
-            return Deserialize((YamlMappingNode)documents[0].RootNode;
+            return Deserialize((YamlMappingNode)documents[0].RootNode);
         }
         """;
 

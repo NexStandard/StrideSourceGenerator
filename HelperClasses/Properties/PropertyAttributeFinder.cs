@@ -8,30 +8,31 @@ using System.Reflection;
 using Microsoft.CodeAnalysis.CSharp;
 using System.ComponentModel;
 
-namespace StrideSourceGenerator;
+namespace StrideSourceGenerator.HelperClasses.Properties;
 internal class PropertyAttributeFinder
 {
-    List<String> allowedAttributes = new List<string>()
+    List<string> allowedAttributes = new List<string>()
     {
-       // typeof(Stride.Core.DataMember),
-       "DataMember",
-       "DataMemberAttribute",
-        "System.Runtime.Serialization.DataMemberAttribute",
-        "System.Runtime.Serialization.DataMember"
+       "DataMemberIgnore",
+       "IgnoreDataMember"
     };
-    public IEnumerable<PropertyDeclarationSyntax> FilterProperties(IEnumerable<PropertyDeclarationSyntax> properties)
+    public IEnumerable<PropertyDeclarationSyntax> FilterProperties(GeneratorExecutionContext context, IEnumerable<PropertyDeclarationSyntax> properties)
     {
-        return properties.Where(x =>
+        return properties.Where(property =>
         {
-            var attributes = x.AttributeLists.SelectMany(b => b.Attributes);
-            foreach(var attribute in attributes)
+            var attributes = property.AttributeLists.SelectMany(b => b.Attributes);
+
+            if (attributes.Any(attribute => allowedAttributes.Contains(attribute.Name.ToString())))
             {
-                if(allowedAttributes.Contains(attribute.Name.ToString()))
-                    return true;
+                return false;
             }
-            return false;
+
+            var propertyInfo = context.Compilation.GetSemanticModel(property.SyntaxTree).GetDeclaredSymbol(property) as IPropertySymbol;
+
+            return GetPropertiesWithAllowedAccessors().Invoke(propertyInfo);
         });
     }
+
 
     public IEnumerable<IPropertySymbol> FilterInheritedProperties(ClassDeclarationSyntax declarationSyntax, GeneratorExecutionContext context)
     {
@@ -46,10 +47,10 @@ internal class PropertyAttributeFinder
         var baseList = declarationSyntax.BaseList;
         if (baseList == null)
             return properties1;
-        if(baseList.Types.Count != 0)
+        if (baseList.Types.Count != 0)
         {
             var s = (INamedTypeSymbol)model.GetSymbolInfo(baseList.Types[0].Type).Symbol;
-            
+
             if (s != null)
             {
 
@@ -70,12 +71,31 @@ internal class PropertyAttributeFinder
     private IEnumerable<IPropertySymbol> FilterBasePropertiesRecursive(ref INamedTypeSymbol currentBaseType)
     {
         var nextBaseType = currentBaseType.BaseType;
-        var result = new List<IPropertySymbol>() ;
-        if(currentBaseType.BaseType != null)
+        var result = new List<IPropertySymbol>();
+        if (currentBaseType.BaseType != null)
         {
             result.Concat(FilterBasePropertiesRecursive(ref nextBaseType));
         }
-        var publicGetterProperties  = result.Concat(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(s => s.GetMethod?.DeclaredAccessibility == Accessibility.Public));
+        var publicGetterProperties = result.Concat(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(GetPropertiesWithAllowedAccessors()));
         return publicGetterProperties;
+    }
+
+    private static Func<IPropertySymbol, bool> GetPropertiesWithAllowedAccessors()
+    {
+        return propertyInfo =>
+        {
+            if (propertyInfo == null)
+            {
+                return false;
+            }
+            return (propertyInfo.SetMethod?.DeclaredAccessibility == Accessibility.Public ||
+                    propertyInfo.SetMethod?.DeclaredAccessibility == Accessibility.Internal ||
+                    propertyInfo.GetMethod?.ReturnsVoid == true
+                )
+                &&
+                    (propertyInfo.GetMethod?.DeclaredAccessibility == Accessibility.Public ||
+                    propertyInfo.GetMethod?.DeclaredAccessibility == Accessibility.Internal);
+
+        };
     }
 }
