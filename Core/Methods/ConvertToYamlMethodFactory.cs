@@ -8,7 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml.Linq;
 
-namespace StrideSourceGenerator.HelperClasses.Methods;
+namespace StrideSourceGenerator.Core.Methods;
 internal class ConvertToYamlMethodFactory
 {
     public List<string> PrivateProperties { get; set; } = new List<string>();
@@ -17,7 +17,7 @@ internal class ConvertToYamlMethodFactory
         // TODO : static until SerializerRegistry works
         PrivateProperties.Add($"private static YamlScalarNode {name} = new YamlScalarNode(\"{name}\");");
     }
-    public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
+    public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix)
     {
 
         StringBuilder sb = new StringBuilder();
@@ -33,7 +33,7 @@ internal class ConvertToYamlMethodFactory
             else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
 
-                sb.Append($"mappedResult.Add({propertyname}, new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyname}));");
+                sb.Append($"mappedResult.Add({propertyname}, new {serializerClassNamePrefix}_{type}().ConvertToYaml(objToSerialize.{propertyname}));");
                 Add(propertyname);
             }
             //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
@@ -57,7 +57,7 @@ internal class ConvertToYamlMethodFactory
 
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
-                sb.Append($"mappedResult.Add({propertyName}, new GeneratedSerializer{type}().ConvertToYaml(objToSerialize.{propertyName}));");
+                sb.Append($"mappedResult.Add({propertyName}, new {serializerClassNamePrefix}{type}().ConvertToYaml(objToSerialize.{propertyName}));");
                 Add(propertyName);
             }
         }
@@ -65,7 +65,6 @@ internal class ConvertToYamlMethodFactory
         return $$"""
         public YamlMappingNode ConvertToYaml({{className}} objToSerialize)
         {
-        if(objToSerialize is not null) { 
         var mappedResult = new YamlMappingNode()
         {
             Tag = "!{{className}}"
@@ -74,8 +73,6 @@ internal class ConvertToYamlMethodFactory
         {{sb}}
 
         return mappedResult;
-        }
-        return new YamlMappingNode();
         }
         """;
 
@@ -98,9 +95,9 @@ internal class ConvertToYamlMethodFactory
     private string CreateSimpleType(string name, string type)
     {
         if (type == "string" || type == "String")
-        {
             return $"mappedResult.Add({name}, objToSerialize.{name});";
-        }
+        if (type == "Guid")
+            return $"mappedResult.Add({name}, objToSerialize.{name}.ToString())";
         return $"mappedResult.Add({name}, objToSerialize.{name}.ToString());";
     }
 }

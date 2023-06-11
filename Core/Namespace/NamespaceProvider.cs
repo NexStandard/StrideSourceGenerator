@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
-namespace StrideSourceGenerator.HelperClasses.Namespace;
+namespace StrideSourceGenerator.Core.Namespace;
 sealed class NamespaceProvider
 {
     /// <summary>
@@ -20,9 +20,7 @@ sealed class NamespaceProvider
         while (syntaxNode != null)
         {
             if (syntaxNode is BaseNamespaceDeclarationSyntax baseNamespace)
-            {
                 return provider.ConvertToNormalNamespace(baseNamespace);
-            }
             syntaxNode = syntaxNode.Parent;
         }
 
@@ -44,13 +42,9 @@ sealed class NamespaceProvider
     {
         if (namespaceDeclaration == null) return null;
         if (namespaceDeclaration is FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
-        {
             return CreateFileScopedNamespace(fileScopedNamespace);
-        }
         if (namespaceDeclaration is NamespaceDeclarationSyntax normalNamespace)
-        {
             return CreateNormalNamespace(normalNamespace);
-        }
         return null;
     }
     private NamespaceDeclarationSyntax CreateFileScopedNamespace(FileScopedNamespaceDeclarationSyntax fileScopedNamespace)

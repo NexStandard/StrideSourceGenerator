@@ -8,7 +8,7 @@ using System.Reflection;
 using Microsoft.CodeAnalysis.CSharp;
 using System.ComponentModel;
 
-namespace StrideSourceGenerator.HelperClasses.Properties;
+namespace StrideSourceGenerator.Core.Properties;
 internal class PropertyAttributeFinder
 {
     List<string> allowedAttributes = new List<string>()
@@ -23,9 +23,7 @@ internal class PropertyAttributeFinder
             var attributes = property.AttributeLists.SelectMany(b => b.Attributes);
 
             if (attributes.Any(attribute => allowedAttributes.Contains(attribute.Name.ToString())))
-            {
                 return false;
-            }
 
             var propertyInfo = context.Compilation.GetSemanticModel(property.SyntaxTree).GetDeclaredSymbol(property) as IPropertySymbol;
 
@@ -52,10 +50,8 @@ internal class PropertyAttributeFinder
             var s = (INamedTypeSymbol)model.GetSymbolInfo(baseList.Types[0].Type).Symbol;
 
             if (s != null)
-            {
 
                 return FilterBasePropertiesRecursive(ref s);
-            }
 
         }
         return Enumerable.Empty<IPropertySymbol>();
@@ -73,9 +69,7 @@ internal class PropertyAttributeFinder
         var nextBaseType = currentBaseType.BaseType;
         var result = new List<IPropertySymbol>();
         if (currentBaseType.BaseType != null)
-        {
             result.Concat(FilterBasePropertiesRecursive(ref nextBaseType));
-        }
         var publicGetterProperties = result.Concat(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(GetPropertiesWithAllowedAccessors()));
         return publicGetterProperties;
     }
@@ -85,9 +79,7 @@ internal class PropertyAttributeFinder
         return propertyInfo =>
         {
             if (propertyInfo == null)
-            {
                 return false;
-            }
             return (propertyInfo.SetMethod?.DeclaredAccessibility == Accessibility.Public ||
                     propertyInfo.SetMethod?.DeclaredAccessibility == Accessibility.Internal ||
                     propertyInfo.GetMethod?.ReturnsVoid == true

@@ -2,16 +2,8 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.Serialization;
-using System.IO;
-using System.Runtime.InteropServices.ComTypes;
-using StrideSourceGenerator.HelperClasses.Namespace;
-using StrideSourceGenerator.HelperClasses.Methods;
-using StrideSourceGenerator.HelperClasses.Properties;
-using StrideSourceGenerator.HelperClasses.GeneratorCreators;
+using StrideSourceGenerator.Core.GeneratorCreators;
 
 namespace StrideSourceGenerator
 {
@@ -23,7 +15,8 @@ namespace StrideSourceGenerator
          // Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
         }
-        private GeneratorClass classGenerator { get; set; } = new();
+        private GeneratorYamlClass classGenerator { get; set; } = new();
+        private GeneratorYamlStruct structGenerator { get; set; } = new();
         public void Execute(GeneratorExecutionContext context)
         {
             try
@@ -32,11 +25,11 @@ namespace StrideSourceGenerator
                 
                 foreach (var classDeclaration in syntaxReceiver.ClassDeclarations)
                 {
-                    classGenerator.CreateGenerator(context, classDeclaration,syntaxReceiver);
+                    classGenerator.StartCreation(context, classDeclaration,syntaxReceiver);
                 }
                 foreach(var structDeclaration in syntaxReceiver.StructDeclarations)
                 {
-
+                    structGenerator.StartCreation(context, structDeclaration,syntaxReceiver);
                 }
             }
             catch (Exception ex)

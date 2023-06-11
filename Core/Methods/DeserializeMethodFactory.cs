@@ -6,7 +6,7 @@ using System.Text;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace StrideSourceGenerator.HelperClasses.Methods;
+namespace StrideSourceGenerator.Core.Methods;
 internal class DeserializeMethodFactory
 {
     public string DeserializeManyMethodTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
@@ -38,16 +38,16 @@ internal class DeserializeMethodFactory
             YamlStream stream = new YamlStream();
             stream.Load(reader);
             List<YamlDocument> documents = stream.Documents;
-            if(documents is null)
-                return null;
+            if(documents == default)
+                return default;
             if(documents.Count == 0)
-                return null;
+                return default;
             return Deserialize((YamlMappingNode)documents[0].RootNode);
         }
         """;
 
     }
-    public string DeserializeFromYamlMappingNodeTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
+    public string DeserializeFromYamlMappingNodeTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix)
     {
         StringBuilder sb = new StringBuilder();
         foreach (var inheritedProperty in symbols)
@@ -55,13 +55,11 @@ internal class DeserializeMethodFactory
             var propertyname = inheritedProperty.Name;
             var type = inheritedProperty.Type.Name;
             if (SimpleTypes.Contains(type))
-            {
                 sb.Append(CreateSimpleType(propertyname, type));
-            }
             else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
 
-                sb.Append($"{propertyname} = new GeneratedSerializer{type}().DeserializeFromYamlNode(dictionaryDocument[\"{propertyname}\"]),");
+                sb.Append($"{propertyname} = new {serializerClassNamePrefix}{type}().DeserializeFromYamlNode(dictionaryDocument[\"{propertyname}\"]),");
             }
             //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
             //   {
@@ -76,25 +74,23 @@ internal class DeserializeMethodFactory
             var type = property.Type.ToString();
 
             if (SimpleTypes.Contains(type))
-            {
                 sb.Append(CreateSimpleType(propertyName, type));
-            }
 
 
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
-                sb.Append($"{propertyName} = new GeneratedSerializer{type}().Deserialize((YamlMappingNode)dictionaryDocument[\"{propertyName}\"]),");
+                sb.Append($"{propertyName} = new {serializerClassNamePrefix}{type}().Deserialize((YamlMappingNode)dictionaryDocument[\"{propertyName}\"]),");
             }
         }
         return $$"""
         public {{className}} Deserialize(YamlMappingNode node)
         {
-            if(node is null)
-                return null;
+            if(node == default)
+                return default;
 
             var dictionaryDocument = node.Children;
             if(dictionaryDocument.Count == 0)
-                return null;
+                return default;
             {{className}} result = new {{className}}()
             {
                 {{sb.ToString().TrimEnd(',')}}

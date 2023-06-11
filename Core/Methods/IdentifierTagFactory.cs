@@ -4,17 +4,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StrideSourceGenerator.HelperClasses.Methods;
+namespace StrideSourceGenerator.Core.Methods;
 internal class IdentifierTagFactory
 {
-    public string IdentifierTagTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
+    public string IdentifierTagTemplate(string className)
     {
         return $"public string IdentifierTag {{ get; }} = \"!{className}\";";
     }
 }
 internal class IdentifierTypeFactory
 {
-    public string IdentifierTagTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
+    public string IdentifierTagTemplate(string className)
     {
         return $"public Type IdentifierType {{ get; }} = typeof({className});";
     }
