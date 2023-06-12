@@ -49,17 +49,18 @@ internal class DeserializeMethodFactory
     }
     public string DeserializeFromYamlMappingNodeTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix)
     {
-        StringBuilder sb = new StringBuilder();
-        foreach (var inheritedProperty in symbols)
+        StringBuilder sbInitializer = new StringBuilder();
+        StringBuilder tempVariableBuilder = new StringBuilder();
+        foreach (IPropertySymbol inheritedProperty in symbols)
         {
             var propertyname = inheritedProperty.Name;
             var type = inheritedProperty.Type.Name;
             if (SimpleTypes.Contains(type))
-                sb.Append(CreateSimpleType(propertyname, type));
+                sbInitializer.Append(CreateSimpleType(propertyname, type));
             else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
             {
-
-                sb.Append($"{propertyname} = new {serializerClassNamePrefix}{type}().DeserializeFromYamlNode(dictionaryDocument[\"{propertyname}\"]),");
+                tempVariableBuilder.Append($"{type} temp{propertyname} = new {serializerClassNamePrefix}{type}().DeserializeFromYamlNode(dictionaryDocument[\"{propertyname}\"]);");
+                sbInitializer.Append($"{propertyname} = temp{propertyname},");
             }
             //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
             //   {
@@ -68,18 +69,18 @@ internal class DeserializeMethodFactory
             //   }
         }
 
-        foreach (var property in properties)
+        foreach (PropertyDeclarationSyntax property in properties)
         {
             var propertyName = property.Identifier.Text;
             var type = property.Type.ToString();
 
             if (SimpleTypes.Contains(type))
-                sb.Append(CreateSimpleType(propertyName, type));
+                sbInitializer.Append(CreateSimpleType(propertyName, type));
 
 
             else if (property.Type is IdentifierNameSyntax classIdentifier)
             {
-                sb.Append($"{propertyName} = new {serializerClassNamePrefix}{type}().Deserialize((YamlMappingNode)dictionaryDocument[\"{propertyName}\"]),");
+                sbInitializer.Append($"{propertyName} = new {serializerClassNamePrefix}{type}().Deserialize((YamlMappingNode)dictionaryDocument[\"{propertyName}\"]),");
             }
         }
         return $$"""
@@ -93,7 +94,7 @@ internal class DeserializeMethodFactory
                 return default;
             {{className}} result = new {{className}}()
             {
-                {{sb.ToString().TrimEnd(',')}}
+                {{sbInitializer.ToString().TrimEnd(',')}}
             };
             return result;
         }

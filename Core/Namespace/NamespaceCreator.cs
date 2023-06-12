@@ -35,18 +35,29 @@ public class NamespaceCreator
     List<UsingDirective> allowedAttributes = new List<UsingDirective>()
     {
         new UsingDirective() {
-            Name = " YamlDotNet.RepresentationModel",
-            MetadataName = "YamlDotNet.RepresentationModel",
-            NugetReference = "<ProjectReference Include=\"..\\NexStandard\\YamlDotNet\\YamlDotNet\\YamlDotNet.csproj\"/>",
+            Name = " System",
+            MetadataName = "System",
+            NugetReference = "",
             HelpLink = "https://stride-docs-test.azurewebsites.net/latest"
         },
         new UsingDirective() {
-            Name = " System.Linq",
-            MetadataName = "System.Linq",
+            Name = " VYaml.Parser",
+            MetadataName = "VYaml.Parser",
+            NugetReference = "",
+            HelpLink = ""
+        },
+        new UsingDirective() {
+            Name = " VYaml.Emitter",
+            MetadataName = "VYaml.Emitter",
+            NugetReference = "",
+            HelpLink = ""
+        },
+        new UsingDirective() {
+            Name = " VYaml.Serialization",
+            MetadataName = "VYaml.Serialization",
             NugetReference = "",
             HelpLink = ""
         }
-        //" Stride.Core.YamlDotNet",   
     };
     public NamespaceDeclarationSyntax AddUsingDirectives(NamespaceDeclarationSyntax normalNamespace, GeneratorExecutionContext context)
     {

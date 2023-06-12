@@ -4,6 +4,8 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using StrideSourceGenerator.Core.GeneratorCreators;
+using StrideSourceGenerator.Core.Roslyn;
+using System.Diagnostics;
 
 namespace StrideSourceGenerator
 {
@@ -12,11 +14,10 @@ namespace StrideSourceGenerator
     {
         public void Initialize(GeneratorInitializationContext context)
         {
-         // Debugger.Launch();
+            // Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
         }
         private GeneratorYamlClass classGenerator { get; set; } = new();
-        private GeneratorYamlStruct structGenerator { get; set; } = new();
         public void Execute(GeneratorExecutionContext context)
         {
             try
@@ -25,11 +26,20 @@ namespace StrideSourceGenerator
                 
                 foreach (var classDeclaration in syntaxReceiver.ClassDeclarations)
                 {
-                    classGenerator.StartCreation(context, classDeclaration,syntaxReceiver);
+                    var semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
+                    var info = new ClassInfo<ClassDeclarationSyntax>()
+                    {
+                        ExecutionContext = context,
+                        TypeSyntax = classDeclaration,
+                        SyntaxReceiver = syntaxReceiver,
+                        Symbol = semanticModel.GetDeclaredSymbol(classDeclaration),
+                        
+                    };
+                    classGenerator.StartCreation(info);
                 }
                 foreach(var structDeclaration in syntaxReceiver.StructDeclarations)
                 {
-                    structGenerator.StartCreation(context, structDeclaration,syntaxReceiver);
+                    // classGenerator.StartCreation(context, structDeclaration,syntaxReceiver);
                 }
             }
             catch (Exception ex)

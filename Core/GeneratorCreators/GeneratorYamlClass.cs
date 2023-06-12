@@ -4,51 +4,44 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using StrideSourceGenerator.Core.Methods;
+using StrideSourceGenerator.Core.Roslyn;
+using StrideSourceGenerator.Core.Properties;
 
 namespace StrideSourceGenerator.Core.GeneratorCreators;
 internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
 {
-    protected override ClassDeclarationSyntax CreateGenerator(GeneratorExecutionContext context, ClassDeclarationSyntax generatorClass, ClassDeclarationSyntax contextClass)
+    protected override ClassDeclarationSyntax CreateGenerator(ClassInfo<ClassDeclarationSyntax> classInfo)
     {
-        var properties = PropertyFinder.FilterProperties(context, contextClass.Members.OfType<PropertyDeclarationSyntax>());
-        generatorClass = CreateClassContent(context, contextClass, GetIdentifierName(contextClass), properties, generatorClass);
-        return generatorClass;
+        PropertyAttributeFinder finder = new PropertyAttributeFinder();
+        var symbol = classInfo.Symbol;
+        var properties = finder.FilterBasePropertiesRecursive(ref symbol);
+        classInfo.SerializerSyntax =  AddMethodsToClass(classInfo.SerializerSyntax, properties, classInfo.TypeName);
+        return classInfo.SerializerSyntax;
     }
 
-
-    private ClassDeclarationSyntax CreateClassContent(GeneratorExecutionContext context, ClassDeclarationSyntax contextClass, string className, IEnumerable<PropertyDeclarationSyntax> properties, ClassDeclarationSyntax generatorClass)
-    {
-        var inheritedProperties = PropertyFinder.FilterInheritedProperties(contextClass, context);
-        AddMethodsToTheClass(className, ref generatorClass, properties, className, inheritedProperties);
-        return generatorClass;
-    }
-    private ConvertToYamlMethodFactory writerFactory;
+    private SerializeMethodFactory writerFactory;
     protected DeserializeMethodFactory DeserializeMethodFactory = new();
 
     protected override string GeneratorClassPrefix { get; } = "GeneratedYamlSerializer";
 
-    private void AddMethodsToTheClass(string className, ref ClassDeclarationSyntax partialClass, IEnumerable<PropertyDeclarationSyntax> properties, string serializerClassName, IEnumerable<IPropertySymbol> inheritedProperties)
+    protected ClassDeclarationSyntax AddMethodsToClass(ClassDeclarationSyntax classContext, IEnumerable<IPropertySymbol> properties, string typeName)
     {
         writerFactory = new();
-        var writeToDictionaryString = writerFactory.ConvertToYamlTemplate(properties, serializerClassName, inheritedProperties, GeneratorClassPrefix);
+        var res = writerFactory.ConvertToYamlTemplate(Enumerable.Empty<PropertyDeclarationSyntax>(), typeName,properties,GeneratorClassPrefix);
         foreach (var privateProperty in writerFactory.PrivateProperties)
         {
-            partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(privateProperty));
+            classContext = AddMember(classContext,privateProperty);
         }
-        var deserializerMethodString = DeserializeMethodFactory.DeserializeMethodTemplate(properties, serializerClassName, inheritedProperties);
-        var deserializerManyMethodString = DeserializeMethodFactory.DeserializeManyMethodTemplate(properties, serializerClassName, inheritedProperties);
-        var deserializerFromYamlMappingNodeString = DeserializeMethodFactory.DeserializeFromYamlMappingNodeTemplate(properties, serializerClassName, inheritedProperties,GeneratorClassPrefix);
-        var writeToDictionaryMethod = SyntaxFactory.ParseMemberDeclaration(writeToDictionaryString);
-        var deserializeFromYamlMappingNodeMethod = SyntaxFactory.ParseMemberDeclaration(deserializerFromYamlMappingNodeString);
-        var deserializeMethod = SyntaxFactory.ParseMemberDeclaration(deserializerMethodString);
-        var identifierTagString = SerializedTypePropertyFactory.IdentifierTagTemplate(serializerClassName);
-        var identifierTypeString = IdentifierTypeFactory.IdentifierTagTemplate(serializerClassName);
-        partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTypeString));
-        partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTagString));
-        partialClass = partialClass.AddMembers(SyntaxFactory.ParseMemberDeclaration(deserializerManyMethodString));
-        partialClass = partialClass.AddMembers(writeToDictionaryMethod);
-        partialClass = partialClass.AddMembers(deserializeFromYamlMappingNodeMethod);
-        partialClass = partialClass.AddMembers(deserializeMethod);
+        classContext = AddMember(classContext, res);
+        var identifierTypeString = IdentifierTypeFactory.IdentifierTagTemplate(typeName);
+        classContext = classContext.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTypeString));
+        classContext = classContext.AddMembers(SyntaxFactory.ParseMemberDeclaration($"public global::StrideSourceGened.{typeName}? Deserialize(ref YamlParser parser, YamlDeserializationContext context){{return null;}}"));
+      /*  classContext = AddMember(classContext, SerializedTypePropertyFactory.IdentifierTagTemplate(serializerClassName));
+        classContext = AddMember(classContext, writerFactory.ConvertToYamlTemplate(properties, serializerClassName, properties, GeneratorClassPrefix));
+        classContext = AddMember(classContext, DeserializeMethodFactory.DeserializeFromYamlMappingNodeTemplate(properties, serializerClassName, properties, GeneratorClassPrefix));
+        classContext = AddMember(classContext, DeserializeMethodFactory.DeserializeManyMethodTemplate(properties, serializerClassName, properties));
+        classContext = AddMember(classContext, DeserializeMethodFactory.DeserializeMethodTemplate(properties, serializerClassName, properties));
+        */
+        return classContext;
     }
-
 }

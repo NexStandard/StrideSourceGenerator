@@ -9,13 +9,18 @@ using System.Text;
 using System.Xml.Linq;
 
 namespace StrideSourceGenerator.Core.Methods;
-internal class ConvertToYamlMethodFactory
+internal class SerializeMethodFactory
 {
     public List<string> PrivateProperties { get; set; } = new List<string>();
     public void Add(string name)
     {
-        // TODO : static until SerializerRegistry works
-        PrivateProperties.Add($"private static YamlScalarNode {name} = new YamlScalarNode(\"{name}\");");
+        byte[] bytes = Encoding.UTF8.GetBytes(name);
+        StringBuilder sb = new StringBuilder();
+        foreach (var by in bytes)
+        {
+            sb.Append(by+",");
+        }
+        PrivateProperties.Add($"private static readonly byte[] UTF8{name} = new byte[]{{{sb.ToString().Trim(',')}}};");
     }
     public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix)
     {
@@ -25,17 +30,13 @@ internal class ConvertToYamlMethodFactory
         {
             var propertyname = inheritedProperty.Name;
             var type = inheritedProperty.Type.Name;
-            if (SimpleTypes.Contains(type))
-            {
-                sb.Append(CreateSimpleType(propertyname, type));
-                Add(propertyname);
-            }
-            else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
-            {
 
-                sb.Append($"mappedResult.Add({propertyname}, new {serializerClassNamePrefix}_{type}().ConvertToYaml(objToSerialize.{propertyname}));");
-                Add(propertyname);
-            }
+            sb.Append($"""
+                     emitter.WriteString("{propertyname}", ScalarStyle.Plain);
+                     context.Serialize(ref emitter, value.{propertyname});
+                    """);
+            Add(propertyname);
+
             //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
             //   {
             //       
@@ -43,36 +44,17 @@ internal class ConvertToYamlMethodFactory
             //   }
         }
 
-        foreach (var property in properties)
-        {
-            var propertyName = property.Identifier.Text;
-            var type = property.Type.ToString();
-
-            if (SimpleTypes.Contains(type))
-            {
-                sb.Append(CreateSimpleType(propertyName, type));
-                Add(propertyName);
-            }
-
-
-            else if (property.Type is IdentifierNameSyntax classIdentifier)
-            {
-                sb.Append($"mappedResult.Add({propertyName}, new {serializerClassNamePrefix}{type}().ConvertToYaml(objToSerialize.{propertyName}));");
-                Add(propertyName);
-            }
-        }
-
         return $$"""
-        public YamlMappingNode ConvertToYaml({{className}} objToSerialize)
+        public void Serialize(ref Utf8YamlEmitter emitter, global::StrideSourceGened.{{className}}? value, YamlSerializationContext context)
         {
-        var mappedResult = new YamlMappingNode()
-        {
-            Tag = "!{{className}}"
-        };
-
-        {{sb}}
-
-        return mappedResult;
+            if (value is null)
+            {
+                emitter.WriteNull();
+                return;
+            }
+            emitter.BeginMapping();
+            {{sb}}
+            emitter.EndMapping();
         }
         """;
 
