@@ -13,6 +13,7 @@ internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
     protected override ClassDeclarationSyntax CreateGenerator(ClassInfo<ClassDeclarationSyntax> classInfo)
     {
         PropertyAttributeFinder finder = new PropertyAttributeFinder();
+        classInfo.SerializerSyntax = AddMember(classInfo.SerializerSyntax, RegistrationInResolver(classInfo.SerializerName));
         var symbol = classInfo.Symbol;
         var properties = finder.FilterBasePropertiesRecursive(ref symbol);
         classInfo.SerializerSyntax =  AddMethodsToClass(classInfo.SerializerSyntax, properties, classInfo.TypeName);
@@ -26,6 +27,7 @@ internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
 
     protected ClassDeclarationSyntax AddMethodsToClass(ClassDeclarationSyntax classContext, IEnumerable<IPropertySymbol> properties, string typeName)
     {
+
         writerFactory = new();
         var res = writerFactory.ConvertToYamlTemplate(Enumerable.Empty<PropertyDeclarationSyntax>(), typeName,properties,GeneratorClassPrefix);
         foreach (var privateProperty in writerFactory.PrivateProperties)

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace StrideSourceGenerator.Core.GeneratorCreators;
+
 internal abstract class GeneratorBase<T>
     where T : TypeDeclarationSyntax
 {
@@ -20,7 +21,7 @@ internal abstract class GeneratorBase<T>
     protected SerializeMethodFactory writerFactory;
     protected DeserializeMethodFactory DeserializeMethodFactory = new();
     protected abstract string GeneratorClassPrefix { get; }
-
+    
     public bool StartCreation(ClassInfo<T> classInfo)
     {
         classInfo.TypeName = GetIdentifierName(classInfo.TypeSyntax);
@@ -32,8 +33,7 @@ internal abstract class GeneratorBase<T>
         NamespaceDeclarationSyntax normalNamespace = NamespaceCreator.CreateNamespace(classInfo.TypeSyntax,classInfo.ExecutionContext, classInfo.TypeName);
         if (normalNamespace == null)
             return false;
-
-        classInfo.SerializerSyntax = CreateGenerator(classInfo);
+               classInfo.SerializerSyntax = CreateGenerator(classInfo);
 
        classInfo.SerializerSyntax = AddInterfaces(classInfo.SerializerSyntax, classInfo.TypeName);
 
@@ -63,5 +63,15 @@ internal abstract class GeneratorBase<T>
     protected ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className)
     {
         return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlFormatter<{className}?>")));
+    }
+    protected string RegistrationInResolver(string generatorName)
+    {
+        return $$"""
+        static {{generatorName}}()
+        {
+            System.Console.WriteLine("The static constructor invoked.");
+            global::VYaml.Serialization.GeneratedResolver.Register(new {{generatorName}}());
+        }
+        """;
     }
 }
