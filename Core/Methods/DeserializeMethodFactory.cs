@@ -44,14 +44,16 @@ internal class DeserializeMethodFactory
                             temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
                         }
                         """);
-
+                    counter = 1;
                 }
                 else
                 {
                     switchFinder.Append($$"""
                         else if (key.SequenceEqual({{"UTF8" + propert.Name}}))
-                        parser.Read();
-                        temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
+                        {
+                            parser.Read();
+                            temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
+                        }
                         """);
                 }
                 
