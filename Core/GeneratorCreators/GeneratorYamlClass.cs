@@ -37,7 +37,7 @@ internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
         classContext = AddMember(classContext, res);
         var identifierTypeString = IdentifierTypeFactory.IdentifierTagTemplate(typeName);
         classContext = classContext.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTypeString));
-        classContext = classContext.AddMembers(SyntaxFactory.ParseMemberDeclaration($"public global::StrideSourceGened.{typeName}? Deserialize(ref YamlParser parser, YamlDeserializationContext context){{return null;}}"));
+        classContext = classContext.AddMembers(SyntaxFactory.ParseMemberDeclaration(DeserializeMethodFactory.DeserializeMethodTemplate(typeName, properties)));
       /*  classContext = AddMember(classContext, SerializedTypePropertyFactory.IdentifierTagTemplate(serializerClassName));
         classContext = AddMember(classContext, writerFactory.ConvertToYamlTemplate(properties, serializerClassName, properties, GeneratorClassPrefix));
         classContext = AddMember(classContext, DeserializeMethodFactory.DeserializeFromYamlMappingNodeTemplate(properties, serializerClassName, properties, GeneratorClassPrefix));

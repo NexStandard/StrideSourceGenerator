@@ -9,96 +9,101 @@ using System.Xml.Linq;
 namespace StrideSourceGenerator.Core.Methods;
 internal class DeserializeMethodFactory
 {
-    public string DeserializeManyMethodTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
+    public string DeserializeMethodTemplate(string className, IEnumerable<IPropertySymbol> symbols)
     {
-        return $$"""
-        public IEnumerable<{{className}}> DeserializeMany(TextReader reader)
+        StringBuilder defaultValues = new StringBuilder();
+        Dictionary<int, List<IPropertySymbol>> map = new ();
+        StringBuilder objectCreation = new StringBuilder();
+        foreach (var property in symbols)
         {
-            YamlStream stream = new YamlStream();
-            stream.Load(reader);
-            List<YamlDocument> documents = stream.Documents;
-            if(documents is null)
-                yield break;
-            if(documents.Count == 0)
-                yield break;
-
-            for(int i = 0; i< documents.Count;i++)
+            int propertyLength = property.Name.Length;
+            defaultValues.Append("var temp").Append(property.Name).Append($"= default({property.Type});");
+            objectCreation.Append(property.Name+"="+"temp"+ property.Name+",");
+            if(!map.ContainsKey(propertyLength)) 
             {
-                 yield return Deserialize((YamlMappingNode)documents[i].RootNode);
+                map.Add(propertyLength, new() { property});
+            }
+            else
+            {
+                map[propertyLength].Add(property);
             }
         }
-        """;
-
-    }
-    public string DeserializeMethodTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols)
-    {
-        return $$"""
-        public {{className}} Deserialize(TextReader reader)
+        StringBuilder switchFinder = new StringBuilder();
+        foreach (var prop in map)
         {
-            YamlStream stream = new YamlStream();
-            stream.Load(reader);
-            List<YamlDocument> documents = stream.Documents;
-            if(documents == default)
-                return default;
-            if(documents.Count == 0)
-                return default;
-            return Deserialize((YamlMappingNode)documents[0].RootNode);
-        }
-        """;
-
-    }
-    public string DeserializeFromYamlMappingNodeTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix)
-    {
-        StringBuilder sbInitializer = new StringBuilder();
-        StringBuilder tempVariableBuilder = new StringBuilder();
-        foreach (IPropertySymbol inheritedProperty in symbols)
-        {
-            var propertyname = inheritedProperty.Name;
-            var type = inheritedProperty.Type.Name;
-            if (SimpleTypes.Contains(type))
-                sbInitializer.Append(CreateSimpleType(propertyname, type));
-            else if (inheritedProperty.Type.TypeKind == TypeKind.Class)
+            switchFinder.Append("case " + prop.Key+":");
+            int counter = 0;
+            foreach(var propert in prop.Value)
             {
-                tempVariableBuilder.Append($"{type} temp{propertyname} = new {serializerClassNamePrefix}{type}().DeserializeFromYamlNode(dictionaryDocument[\"{propertyname}\"]);");
-                sbInitializer.Append($"{propertyname} = temp{propertyname},");
+                if(counter == 0)
+                {
+                    switchFinder.Append($$"""
+                        if (key.SequenceEqual({{"UTF8" + propert.Name}}))
+                        {
+                            parser.Read();
+                            temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
+                        }
+                        """);
+
+                }
+                else
+                {
+                    switchFinder.Append($$"""
+                        else if (key.SequenceEqual({{"UTF8" + propert.Name}}))
+                        parser.Read();
+                        temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
+                        """);
+                }
+                
             }
-            //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
-            //   {
-            //       
-            //       sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), new YamlScalarNode(objToSerialize.{propertyname}),");
-            //   }
-        }
-
-        foreach (PropertyDeclarationSyntax property in properties)
-        {
-            var propertyName = property.Identifier.Text;
-            var type = property.Type.ToString();
-
-            if (SimpleTypes.Contains(type))
-                sbInitializer.Append(CreateSimpleType(propertyName, type));
-
-
-            else if (property.Type is IdentifierNameSyntax classIdentifier)
-            {
-                sbInitializer.Append($"{propertyName} = new {serializerClassNamePrefix}{type}().Deserialize((YamlMappingNode)dictionaryDocument[\"{propertyName}\"]),");
-            }
+            switchFinder.Append("""
+                else
+                {
+                    parser.Read();
+                    parser.SkipCurrentNode();
+                }
+                continue;
+                """);
         }
         return $$"""
-        public {{className}} Deserialize(YamlMappingNode node)
-        {
-            if(node == default)
-                return default;
+             public {{className}}? Deserialize(ref YamlParser parser, YamlDeserializationContext context)
+             {
+                 if (parser.IsNullScalar())
+                 {
+                     parser.Read();
+                     return default;
+                 }
+                 parser.ReadWithVerify(ParseEventType.MappingStart);
+                 {{defaultValues}}
+         while (!parser.End && parser.CurrentEventType != ParseEventType.MappingEnd)
+         {
+             if (parser.CurrentEventType != ParseEventType.Scalar)
+             {
+                 throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
+             }
 
-            var dictionaryDocument = node.Children;
-            if(dictionaryDocument.Count == 0)
-                return default;
-            {{className}} result = new {{className}}()
-            {
-                {{sbInitializer.ToString().TrimEnd(',')}}
-            };
-            return result;
-        }
-        """;
+             if (!parser.TryGetScalarAsSpan(out var key))
+             {
+                 throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
+             }
+
+             switch (key.Length)
+             {
+             {{switchFinder}}
+                 default:
+                     parser.Read();
+                     parser.SkipCurrentNode();
+                     continue;
+             }
+         }
+         parser.ReadWithVerify(ParseEventType.MappingEnd);
+         return new {{className}}
+         {
+             {{objectCreation.ToString().Trim(',')}}
+         };
+         }
+         """;
+
     }
 
     private List<string> SimpleTypes = new()

@@ -17,10 +17,16 @@ internal class ClassInfo<T>
     public AttributeData YamlObjectAttribute { get; set; }
     public string TypeName { get; set; }
     public string SerializerName { get; set; }
+    public string NamespaceName { get; set; }
     public BFNNexSyntaxReceiver SyntaxReceiver { get; set; }
     public bool IsNested()
     {
-        return TypeSyntax.Parent is TypeDeclarationSyntax;
+        bool isNested = TypeSyntax.Parent is TypeDeclarationSyntax;
+        if (isNested)
+        {
+            
+        }
+        return isNested;
     }
     public static byte[] GetUTF8Bytes(string value)
     {
