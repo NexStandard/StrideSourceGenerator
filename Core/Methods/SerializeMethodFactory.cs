@@ -53,8 +53,10 @@ internal class SerializeMethodFactory
                 return;
             }
             emitter.BeginMapping();
+            emitter.Tag("!{{className}}");
             {{sb}}
             emitter.EndMapping();
+            
         }
         """;
 

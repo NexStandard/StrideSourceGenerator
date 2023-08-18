@@ -57,6 +57,12 @@ public class NamespaceCreator
             MetadataName = "VYaml.Serialization",
             NugetReference = "",
             HelpLink = ""
+        },
+        new UsingDirective() {
+            Name = " System.Text",
+            MetadataName = "System.Text",
+            NugetReference = "",
+            HelpLink = ""
         }
     };
     public NamespaceDeclarationSyntax AddUsingDirectives(NamespaceDeclarationSyntax normalNamespace, GeneratorExecutionContext context)
