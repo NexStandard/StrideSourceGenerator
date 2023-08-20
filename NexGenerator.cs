@@ -6,11 +6,12 @@ using System.Collections.Generic;
 using StrideSourceGenerator.Core.GeneratorCreators;
 using StrideSourceGenerator.Core.Roslyn;
 using System.Diagnostics;
+using StrideSourceGenerator.AttributeFinder;
 
 namespace StrideSourceGenerator
 {
     [Generator]
-    public class BFNNexSourceGenerator : ISourceGenerator
+    public class NexGenerator : ISourceGenerator
     {
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -22,12 +23,12 @@ namespace StrideSourceGenerator
         {
             try
             {
-                var syntaxReceiver = (BFNNexSyntaxReceiver)context.SyntaxReceiver;
+                BFNNexSyntaxReceiver syntaxReceiver = (BFNNexSyntaxReceiver)context.SyntaxReceiver;
                 
-                foreach (var classDeclaration in syntaxReceiver.ClassDeclarations)
+                foreach (ClassDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
                 {
-                    var semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
-                    var info = new ClassInfo<ClassDeclarationSyntax>()
+                    SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
+                    ClassInfo<ClassDeclarationSyntax> info = new ClassInfo<ClassDeclarationSyntax>()
                     {
                         ExecutionContext = context,
                         TypeSyntax = classDeclaration,
@@ -37,7 +38,7 @@ namespace StrideSourceGenerator
                     };
                     classGenerator.StartCreation(info);
                 }
-                foreach(var structDeclaration in syntaxReceiver.StructDeclarations)
+                foreach(StructDeclarationSyntax structDeclaration in syntaxReceiver.StructDeclarations)
                 {
                     // classGenerator.StartCreation(context, structDeclaration,syntaxReceiver);
                 }
@@ -78,12 +79,12 @@ namespace StrideSourceGenerator
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            var result = finder.FindAttribute(syntaxNode);
+            ClassDeclarationSyntax result = finder.FindAttribute(syntaxNode);
             if (result != null)
             {
                 ClassDeclarations.Add(result);
             }
-            var structResult = structFinder.FindAttribute(syntaxNode);
+            StructDeclarationSyntax structResult = structFinder.FindAttribute(syntaxNode);
             if (structResult != null)
             {
                 StructDeclarations.Add(structResult);

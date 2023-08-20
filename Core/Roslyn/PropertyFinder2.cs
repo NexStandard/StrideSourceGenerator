@@ -20,7 +20,7 @@ internal class PropertyFinder2
         // Iterate Parent -> Derived
         if (symbol.BaseType != null)
         {
-            foreach (var item in GetAllMembers<T>(symbol.BaseType))
+            foreach (T item in GetAllMembers<T>(symbol.BaseType))
             {
 
                 // override item already iterated in parent type
@@ -32,7 +32,7 @@ internal class PropertyFinder2
             }
         }
 
-        foreach (var item in symbol.GetMembers())
+        foreach (ISymbol item in symbol.GetMembers())
         {
             if (!withoutOverride || !item.IsOverride)
             {

@@ -14,7 +14,7 @@ internal class DeserializeMethodFactory
         StringBuilder defaultValues = new StringBuilder();
         Dictionary<int, List<IPropertySymbol>> map = new ();
         StringBuilder objectCreation = new StringBuilder();
-        foreach (var property in symbols)
+        foreach (IPropertySymbol property in symbols)
         {
             int propertyLength = property.Name.Length;
             defaultValues.Append("var temp").Append(property.Name).Append($"= default({property.Type});");
@@ -29,11 +29,11 @@ internal class DeserializeMethodFactory
             }
         }
         StringBuilder switchFinder = new StringBuilder();
-        foreach (var prop in map)
+        foreach (KeyValuePair<int, List<IPropertySymbol>> prop in map)
         {
             switchFinder.Append("case " + prop.Key+":");
             int counter = 0;
-            foreach(var propert in prop.Value)
+            foreach(IPropertySymbol propert in prop.Value)
             {
                 if(counter == 0)
                 {

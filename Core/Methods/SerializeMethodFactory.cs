@@ -16,7 +16,7 @@ internal class SerializeMethodFactory
     {
         byte[] bytes = Encoding.UTF8.GetBytes(name);
         StringBuilder sb = new StringBuilder();
-        foreach (var by in bytes)
+        foreach (byte by in bytes)
         {
             sb.Append(by+",");
         }
@@ -26,10 +26,10 @@ internal class SerializeMethodFactory
     {
 
         StringBuilder sb = new StringBuilder();
-        foreach (var inheritedProperty in symbols)
+        foreach (IPropertySymbol inheritedProperty in symbols)
         {
-            var propertyname = inheritedProperty.Name;
-            var type = inheritedProperty.Type.Name;
+            string propertyname = inheritedProperty.Name;
+            string type = inheritedProperty.Type.Name;
 
             sb.Append($"""
                      emitter.WriteString("{propertyname}", ScalarStyle.Plain);

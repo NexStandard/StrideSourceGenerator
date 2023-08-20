@@ -18,7 +18,7 @@ internal class StructAttributeFinder
             switch (syntaxNode)
             {
                 case StructDeclarationSyntax classDeclaration:
-                    var attribute = classDeclaration.AttributeLists
+                AttributeSyntax attribute = classDeclaration.AttributeLists
                         .SelectMany(al => al.Attributes)
                         .FirstOrDefault(a => allowedAttributes.Contains(a.Name.ToString()));
 

@@ -13,15 +13,12 @@ internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
     protected override ClassDeclarationSyntax CreateGenerator(ClassInfo<ClassDeclarationSyntax> classInfo)
     {
         PropertyAttributeFinder finder = new PropertyAttributeFinder();
-        classInfo.SerializerSyntax = AddMember(classInfo.SerializerSyntax, RegistrationInResolver(classInfo.SerializerName));
-        var symbol = classInfo.Symbol;
-        var properties = finder.FilterBasePropertiesRecursive(ref symbol);
+        INamedTypeSymbol symbol = classInfo.Symbol;
+        IEnumerable<IPropertySymbol> properties = finder.FilterBasePropertiesRecursive(ref symbol);
+        classInfo.SerializerSyntax = classInfo.SerializerSyntax.AddMembers(RegisterMethodFactory.GetRegisterMethod(classInfo)); ;
         classInfo.SerializerSyntax =  AddMethodsToClass(classInfo.SerializerSyntax, properties, classInfo.TypeName);
         return classInfo.SerializerSyntax;
     }
-
-    private SerializeMethodFactory writerFactory;
-    protected DeserializeMethodFactory DeserializeMethodFactory = new();
 
     protected override string GeneratorClassPrefix { get; } = "GeneratedYamlSerializer";
 
@@ -29,14 +26,14 @@ internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
     {
 
         writerFactory = new();
-        var res = writerFactory.ConvertToYamlTemplate(Enumerable.Empty<PropertyDeclarationSyntax>(), typeName,properties,GeneratorClassPrefix);
-        foreach (var privateProperty in writerFactory.PrivateProperties)
+        string res = writerFactory.ConvertToYamlTemplate(Enumerable.Empty<PropertyDeclarationSyntax>(), typeName,properties,GeneratorClassPrefix);
+        foreach (string privateProperty in writerFactory.PrivateProperties)
         {
             classContext = AddMember(classContext,privateProperty);
         }
+        
         classContext = AddMember(classContext, res);
-        var identifierTypeString = IdentifierTypeFactory.IdentifierTagTemplate(typeName);
-        classContext = classContext.AddMembers(SyntaxFactory.ParseMemberDeclaration(identifierTypeString));
+        classContext = classContext.AddMembers(TypeTemplate.GetTemplate(typeName));
         classContext = classContext.AddMembers(SyntaxFactory.ParseMemberDeclaration(DeserializeMethodFactory.DeserializeMethodTemplate(typeName, properties)));
       /*  classContext = AddMember(classContext, SerializedTypePropertyFactory.IdentifierTagTemplate(serializerClassName));
         classContext = AddMember(classContext, writerFactory.ConvertToYamlTemplate(properties, serializerClassName, properties, GeneratorClassPrefix));

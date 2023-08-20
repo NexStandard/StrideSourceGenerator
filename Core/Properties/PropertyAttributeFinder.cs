@@ -20,12 +20,12 @@ internal class PropertyAttributeFinder
     {
         return properties.Where(property =>
         {
-            var attributes = property.AttributeLists.SelectMany(b => b.Attributes);
+            IEnumerable<AttributeSyntax> attributes = property.AttributeLists.SelectMany(b => b.Attributes);
 
             if (attributes.Any(attribute => allowedAttributes.Contains(attribute.Name.ToString())))
                 return false;
 
-            var propertyInfo = context.Compilation.GetSemanticModel(property.SyntaxTree).GetDeclaredSymbol(property) as IPropertySymbol;
+            IPropertySymbol propertyInfo = context.Compilation.GetSemanticModel(property.SyntaxTree).GetDeclaredSymbol(property) as IPropertySymbol;
 
             return GetPropertiesWithAllowedAccessors().Invoke(propertyInfo);
         });
@@ -42,12 +42,12 @@ internal class PropertyAttributeFinder
         Compilation compilation = context.Compilation;
         SemanticModel model = compilation.GetSemanticModel(tree);
         IEnumerable<IPropertySymbol> properties1 = Enumerable.Empty<IPropertySymbol>();
-        var baseList = declarationSyntax.BaseList;
+        BaseListSyntax baseList = declarationSyntax.BaseList;
         if (baseList == null)
             return properties1;
         if (baseList.Types.Count != 0)
         {
-            var s = (INamedTypeSymbol)model.GetSymbolInfo(baseList.Types[0].Type).Symbol;
+            INamedTypeSymbol s = (INamedTypeSymbol)model.GetSymbolInfo(baseList.Types[0].Type).Symbol;
 
             if (s != null)
 
@@ -66,11 +66,11 @@ internal class PropertyAttributeFinder
     /// <returns>All allowed Properties in any base class in the inheritance tree</returns>
     public IEnumerable<IPropertySymbol> FilterBasePropertiesRecursive(ref INamedTypeSymbol currentBaseType)
     {
-        var nextBaseType = currentBaseType.BaseType;
-        var result = new List<IPropertySymbol>();
+        INamedTypeSymbol nextBaseType = currentBaseType.BaseType;
+        List<IPropertySymbol> result = new List<IPropertySymbol>();
         if (currentBaseType.BaseType != null)
             result.Concat(FilterBasePropertiesRecursive(ref nextBaseType));
-        var publicGetterProperties = result.Concat(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(GetPropertiesWithAllowedAccessors()));
+        IEnumerable<IPropertySymbol> publicGetterProperties = result.Concat(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(GetPropertiesWithAllowedAccessors()));
         return publicGetterProperties;
     }
 

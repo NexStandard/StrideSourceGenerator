@@ -1,27 +1,26 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using StrideSourceGenerator.API;
 using StrideSourceGenerator.Core.Methods;
 using StrideSourceGenerator.Core.Namespace;
 using StrideSourceGenerator.Core.Properties;
 using StrideSourceGenerator.Core.Roslyn;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
+using StrideSourceGenerator.Core.Templates;
 namespace StrideSourceGenerator.Core.GeneratorCreators;
 
 internal abstract class GeneratorBase<T>
     where T : TypeDeclarationSyntax
 {
-    protected IdentifierTagFactory SerializedTypePropertyFactory = new();
-    protected IdentifierTypeFactory IdentifierTypeFactory = new();
+    protected ITemplateProvider TagTemplate = new TagTemplateProvider();
+    protected ITemplateProvider TypeTemplate = new TypeTemplateProvider();
     protected PropertyAttributeFinder PropertyFinder { get; } = new();
     protected NamespaceCreator NamespaceCreator { get; } = new();
     protected SerializeMethodFactory writerFactory;
     protected DeserializeMethodFactory DeserializeMethodFactory = new();
+    protected RegisterMethodFactory RegisterMethodFactory { get; } = new();
     protected abstract string GeneratorClassPrefix { get; }
-    
+
     public bool StartCreation(ClassInfo<T> classInfo)
     {
         classInfo.TypeName = GetIdentifierName(classInfo.TypeSyntax);
@@ -30,18 +29,17 @@ internal abstract class GeneratorBase<T>
         classInfo.SerializerSyntax = SyntaxFactory.ClassDeclaration(classInfo.SerializerName)
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
-        NamespaceDeclarationSyntax normalNamespace = NamespaceCreator.CreateNamespace(classInfo.TypeSyntax,classInfo.ExecutionContext, classInfo.TypeName);
+        NamespaceDeclarationSyntax normalNamespace = NamespaceCreator.CreateNamespace(classInfo.TypeSyntax, classInfo.ExecutionContext, classInfo.TypeName);
         if (normalNamespace == null)
             return false;
-               classInfo.SerializerSyntax = CreateGenerator(classInfo);
+        classInfo.SerializerSyntax = CreateGenerator(classInfo);
 
-       classInfo.SerializerSyntax = AddInterfaces(classInfo.SerializerSyntax, classInfo.TypeName);
-
-        var compilationUnit = SyntaxFactory.CompilationUnit()
+        classInfo.SerializerSyntax = AddInterfaces(classInfo.SerializerSyntax, classInfo.TypeName);
+        CompilationUnitSyntax compilationUnit = SyntaxFactory.CompilationUnit()
                                       .AddMembers(normalNamespace
                                       .AddMembers(classInfo.SerializerSyntax));
 
-        var sourceText = compilationUnit
+        string sourceText = compilationUnit
             .NormalizeWhitespace()
             .ToFullString();
 
@@ -55,23 +53,15 @@ internal abstract class GeneratorBase<T>
     {
         return classDeclaration.Identifier.ValueText;
     }
-    protected T AddMember(T context,string newMember)
+    protected T AddMember(T context, string newMember)
     {
         context = (T)context.AddMembers(SyntaxFactory.ParseMemberDeclaration(newMember));
         return context;
     }
     protected ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className)
     {
+        partialClass = partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IRegisterYamlFormatter")));
         return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlFormatter<{className}?>")));
     }
-    protected string RegistrationInResolver(string generatorName)
-    {
-        return $$"""
-        static {{generatorName}}()
-        {
-            System.Console.WriteLine("The static constructor invoked.");
-            global::VYaml.Serialization.GeneratedResolver.Register(new {{generatorName}}());
-        }
-        """;
-    }
+
 }

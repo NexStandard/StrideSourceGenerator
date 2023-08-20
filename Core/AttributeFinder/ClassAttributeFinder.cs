@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StrideSourceGenerator;
+namespace StrideSourceGenerator.AttributeFinder;
 internal class ClassAttributeFinder
 {
-    List<String> allowedAttributes = new List<String>()
-    { 
+    List<string> allowedAttributes = new List<string>()
+    {
         "Stride.Core.DataContract",
         "DataContract",
         "System.Runtime.Serialization.DataContract"
@@ -19,7 +19,7 @@ internal class ClassAttributeFinder
         switch (syntaxNode)
         {
             case ClassDeclarationSyntax classDeclaration:
-                var attribute = classDeclaration.AttributeLists
+                AttributeSyntax attribute = classDeclaration.AttributeLists
                     .SelectMany(al => al.Attributes)
                     .FirstOrDefault(a => allowedAttributes.Contains(a.Name.ToString()));
 

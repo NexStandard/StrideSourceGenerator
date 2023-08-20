@@ -20,12 +20,12 @@ public class NamespaceCreator
     /// <returns>a normal namespace or null if it failed.</returns>
     public NamespaceDeclarationSyntax CreateNamespace(TypeDeclarationSyntax classDeclaration, GeneratorExecutionContext context, string className)
     {
-        var normalNamespace = NamespaceProvider.GetNamespaceFromSyntaxNode(classDeclaration);
+        NamespaceDeclarationSyntax normalNamespace = NamespaceProvider.GetNamespaceFromSyntaxNode(classDeclaration);
 
         if (normalNamespace == null)
         {
-            var error = NamespaceProvider.DiagnosticsErrorWhenNull(className);
-            var location = Location.Create(classDeclaration.SyntaxTree, classDeclaration.Identifier.Span);
+            DiagnosticDescriptor error = NamespaceProvider.DiagnosticsErrorWhenNull(className);
+            Location location = Location.Create(classDeclaration.SyntaxTree, classDeclaration.Identifier.Span);
             context.ReportDiagnostic(Diagnostic.Create(error, location));
             return null;
         }
@@ -68,8 +68,8 @@ public class NamespaceCreator
     public NamespaceDeclarationSyntax AddUsingDirectives(NamespaceDeclarationSyntax normalNamespace, GeneratorExecutionContext context)
     {
 
-        var compilation = context.Compilation;
-        foreach (var allowedUsing in allowedAttributes)
+        Compilation compilation = context.Compilation;
+        foreach (UsingDirective allowedUsing in allowedAttributes)
         {
             normalNamespace = normalNamespace.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(allowedUsing.Name)));
         }

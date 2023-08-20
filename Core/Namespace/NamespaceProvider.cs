@@ -49,12 +49,12 @@ sealed class NamespaceProvider
     }
     private NamespaceDeclarationSyntax CreateFileScopedNamespace(FileScopedNamespaceDeclarationSyntax fileScopedNamespace)
     {
-        var name = fileScopedNamespace.Name;
+        NameSyntax name = fileScopedNamespace.Name;
         return SyntaxFactory.NamespaceDeclaration(name);
     }
     private NamespaceDeclarationSyntax CreateNormalNamespace(NamespaceDeclarationSyntax normalNamespace)
     {
-        var name = normalNamespace.Name;
+        NameSyntax name = normalNamespace.Name;
         return SyntaxFactory.NamespaceDeclaration(name);
     }
 }

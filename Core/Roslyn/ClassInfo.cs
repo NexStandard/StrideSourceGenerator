@@ -19,27 +19,19 @@ internal class ClassInfo<T>
     public string SerializerName { get; set; }
     public string NamespaceName { get; set; }
     public BFNNexSyntaxReceiver SyntaxReceiver { get; set; }
-    public bool IsNested()
+    public IEnumerable<IPropertySymbol> Properties
     {
-        bool isNested = TypeSyntax.Parent is TypeDeclarationSyntax;
-        if (isNested)
+        get
         {
-            
+            return PropertyFinder2.GetProperties(Symbol)
+                           .Where(x => x is IPropertySymbol
+                           {
+                               IsStatic: false,
+                               IsImplicitlyDeclared: false
+                           })
+                           .Where(y => y.SetMethod?.DeclaredAccessibility == Accessibility.Public || y.SetMethod?.DeclaredAccessibility == Accessibility.Internal)
+                           .Where(z => z.GetMethod?.DeclaredAccessibility == Accessibility.Public || z.SetMethod?.DeclaredAccessibility == Accessibility.Internal);
         }
-        return isNested;
-    }
-    public static byte[] GetUTF8Bytes(string value)
-    {
-        return System.Text.Encoding.UTF8.GetBytes(value);
-    }
-    public IEnumerable<IPropertySymbol> Properties()
-    {
-        return PropertyFinder2.GetProperties(Symbol)
-               .Where(x => x is IPropertySymbol  {
-                   IsStatic: false,
-                   IsImplicitlyDeclared: false })
-               .Where(y => y.SetMethod?.DeclaredAccessibility == Accessibility.Public || y.SetMethod?.DeclaredAccessibility == Accessibility.Internal)
-               .Where(z => z.GetMethod?.DeclaredAccessibility == Accessibility.Public || z.SetMethod?.DeclaredAccessibility == Accessibility.Internal);
     }
     public IEnumerable<IFieldSymbol> Fields()
     {
