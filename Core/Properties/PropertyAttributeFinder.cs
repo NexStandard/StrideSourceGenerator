@@ -73,7 +73,13 @@ internal class PropertyAttributeFinder
         IEnumerable<IPropertySymbol> publicGetterProperties = result.Concat(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(GetPropertiesWithAllowedAccessors()));
         return publicGetterProperties;
     }
-
+    /// <summary>
+    /// Retrieves a delegate that filters properties based on their accessibility and accessor types.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="Func{IPropertySymbol, Boolean}"/> delegate that returns <c>true</c> for properties that have allowed accessors,
+    /// and <c>false</c> otherwise.
+    /// </returns>
     private static Func<IPropertySymbol, bool> GetPropertiesWithAllowedAccessors()
     {
         return propertyInfo =>

@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using StrideSourceGenerator.API;
 using StrideSourceGenerator.Core.Methods;
-using StrideSourceGenerator.Core.Namespace;
 using StrideSourceGenerator.Core.Properties;
 using StrideSourceGenerator.Core.Roslyn;
 using StrideSourceGenerator.Core.Templates;
@@ -15,7 +14,7 @@ internal abstract class GeneratorBase<T>
     protected ITemplateProvider TagTemplate = new TagTemplateProvider();
     protected ITemplateProvider TypeTemplate = new TypeTemplateProvider();
     protected PropertyAttributeFinder PropertyFinder { get; } = new();
-    protected NamespaceCreator NamespaceCreator { get; } = new();
+    private NamespaceProvider<T> NamespaceProvider { get; } = new();
     protected SerializeMethodFactory writerFactory;
     protected DeserializeMethodFactory DeserializeMethodFactory = new();
     protected RegisterMethodFactory RegisterMethodFactory { get; } = new();
@@ -25,13 +24,16 @@ internal abstract class GeneratorBase<T>
     {
         classInfo.TypeName = GetIdentifierName(classInfo.TypeSyntax);
         classInfo.SerializerName = GeneratorClassPrefix + classInfo.TypeName;
+        
+        var compilerGeneratedAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("System.Runtime.CompilerServices.CompilerGenerated"));
 
         classInfo.SerializerSyntax = SyntaxFactory.ClassDeclaration(classInfo.SerializerName)
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
-
-        NamespaceDeclarationSyntax normalNamespace = NamespaceCreator.CreateNamespace(classInfo.TypeSyntax, classInfo.ExecutionContext, classInfo.TypeName);
+            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+            .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(compilerGeneratedAttribute));
+        NamespaceDeclarationSyntax normalNamespace = NamespaceProvider.GetNamespaceFromSyntaxNode(classInfo);
         if (normalNamespace == null)
             return false;
+        normalNamespace = NamespaceProvider.AddUsingDirectivess(normalNamespace, classInfo.ExecutionContext);
         classInfo.SerializerSyntax = CreateGenerator(classInfo);
 
         classInfo.SerializerSyntax = AddInterfaces(classInfo.SerializerSyntax, classInfo.TypeName);
