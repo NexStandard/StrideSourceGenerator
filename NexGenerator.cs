@@ -79,6 +79,8 @@ namespace StrideSourceGenerator
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
+            ClassDeclarations.Clear();
+            StructDeclarations.Clear();
             ClassDeclarationSyntax result = finder.FindAttribute(syntaxNode);
             if (result != null)
             {
