@@ -80,19 +80,25 @@ namespace StrideSourceGenerator
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            ClassDeclarations.Clear();
-            StructDeclarations.Clear();
+            //ClassDeclarations.Clear();
+            //StructDeclarations.Clear();
             ClassDeclarationSyntax result = finder.FindAttribute(syntaxNode);
 
-            if (result != null && !result.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.AbstractKeyword)))
+            if (result != null && !IsAbstract(result))
             {
+
                 ClassDeclarations.Add(result);
+                
             }
             StructDeclarationSyntax structResult = structFinder.FindAttribute(syntaxNode);
             if (structResult != null)
             {
                 StructDeclarations.Add(structResult);
             }
+        }
+        public bool IsAbstract(ClassDeclarationSyntax classDeclaration)
+        {
+            return classDeclaration.Modifiers.Any(x => x.IsKind(SyntaxKind.AbstractKeyword));
         }
     }
 }
