@@ -24,8 +24,8 @@ internal abstract class GeneratorBase<T>
     {
         classInfo.TypeName = GetIdentifierName(classInfo.TypeSyntax);
         classInfo.SerializerName = GeneratorClassPrefix + classInfo.TypeName;
-        
-        var compilerGeneratedAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("System.Runtime.CompilerServices.CompilerGenerated"));
+
+        AttributeSyntax compilerGeneratedAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("System.Runtime.CompilerServices.CompilerGenerated"));
 
         classInfo.SerializerSyntax = SyntaxFactory.ClassDeclaration(classInfo.SerializerName)
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
