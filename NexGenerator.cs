@@ -7,6 +7,7 @@ using StrideSourceGenerator.Core.GeneratorCreators;
 using StrideSourceGenerator.Core.Roslyn;
 using System.Diagnostics;
 using StrideSourceGenerator.AttributeFinder;
+using System.Linq;
 
 namespace StrideSourceGenerator
 {
@@ -24,7 +25,7 @@ namespace StrideSourceGenerator
             try
             {
                 BFNNexSyntaxReceiver syntaxReceiver = (BFNNexSyntaxReceiver)context.SyntaxReceiver;
-                
+
                 foreach (ClassDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
                 {
                     SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
@@ -34,11 +35,11 @@ namespace StrideSourceGenerator
                         TypeSyntax = classDeclaration,
                         SyntaxReceiver = syntaxReceiver,
                         Symbol = semanticModel.GetDeclaredSymbol(classDeclaration),
-                        
+
                     };
                     classGenerator.StartCreation(info);
                 }
-                foreach(StructDeclarationSyntax structDeclaration in syntaxReceiver.StructDeclarations)
+                foreach (StructDeclarationSyntax structDeclaration in syntaxReceiver.StructDeclarations)
                 {
                     // classGenerator.StartCreation(context, structDeclaration,syntaxReceiver);
                 }
@@ -74,15 +75,16 @@ namespace StrideSourceGenerator
     {
         ClassAttributeFinder finder = new();
         StructAttributeFinder structFinder = new();
-        public List<ClassDeclarationSyntax> ClassDeclarations { get; private set; } = new ();
-        public List<StructDeclarationSyntax> StructDeclarations { get; private set; } = new ();
+        public List<ClassDeclarationSyntax> ClassDeclarations { get; private set; } = new();
+        public List<StructDeclarationSyntax> StructDeclarations { get; private set; } = new();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             ClassDeclarations.Clear();
             StructDeclarations.Clear();
             ClassDeclarationSyntax result = finder.FindAttribute(syntaxNode);
-            if (result != null)
+
+            if (result != null && !result.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.AbstractKeyword)))
             {
                 ClassDeclarations.Add(result);
             }
