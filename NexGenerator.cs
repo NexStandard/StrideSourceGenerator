@@ -9,96 +9,95 @@ using System.Diagnostics;
 using StrideSourceGenerator.AttributeFinder;
 using System.Linq;
 
-namespace StrideSourceGenerator
+namespace StrideSourceGenerator;
+
+[Generator]
+public class NexGenerator : ISourceGenerator
 {
-    [Generator]
-    public class NexGenerator : ISourceGenerator
+    public void Initialize(GeneratorInitializationContext context)
     {
-        public void Initialize(GeneratorInitializationContext context)
+        // Debugger.Launch();
+        context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
+    }
+    private GeneratorYamlClass classGenerator { get; set; } = new();
+    public void Execute(GeneratorExecutionContext context)
+    {
+        try
         {
-            // Debugger.Launch();
-            context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
+            BFNNexSyntaxReceiver syntaxReceiver = (BFNNexSyntaxReceiver)context.SyntaxReceiver;
+
+            foreach (ClassDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
+            {
+                SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
+                ClassInfo<ClassDeclarationSyntax> info = new ClassInfo<ClassDeclarationSyntax>()
+                {
+                    ExecutionContext = context,
+                    TypeSyntax = classDeclaration,
+                    SyntaxReceiver = syntaxReceiver,
+                    Symbol = semanticModel.GetDeclaredSymbol(classDeclaration),
+
+                };
+                classGenerator.StartCreation(info);
+            }
+            foreach (StructDeclarationSyntax structDeclaration in syntaxReceiver.StructDeclarations)
+            {
+                // classGenerator.StartCreation(context, structDeclaration,syntaxReceiver);
+            }
         }
-        private GeneratorYamlClass classGenerator { get; set; } = new();
-        public void Execute(GeneratorExecutionContext context)
+        catch (Exception ex)
         {
-            try
-            {
-                BFNNexSyntaxReceiver syntaxReceiver = (BFNNexSyntaxReceiver)context.SyntaxReceiver;
-
-                foreach (ClassDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
-                {
-                    SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
-                    ClassInfo<ClassDeclarationSyntax> info = new ClassInfo<ClassDeclarationSyntax>()
-                    {
-                        ExecutionContext = context,
-                        TypeSyntax = classDeclaration,
-                        SyntaxReceiver = syntaxReceiver,
-                        Symbol = semanticModel.GetDeclaredSymbol(classDeclaration),
-
-                    };
-                    classGenerator.StartCreation(info);
-                }
-                foreach (StructDeclarationSyntax structDeclaration in syntaxReceiver.StructDeclarations)
-                {
-                    // classGenerator.StartCreation(context, structDeclaration,syntaxReceiver);
-                }
-            }
-            catch (Exception ex)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    CompilerServicesUnhandledException,
-                    Location.None,
-                    ex.GetType().Name,
-                    ex.ToString()));
-            }
-
+            context.ReportDiagnostic(Diagnostic.Create(
+                CompilerServicesUnhandledException,
+                Location.None,
+                ex.GetType().Name,
+                ex.ToString()));
         }
 
-
-
-
-        public const string CompilerServicesDiagnosticIdFormat = "STR0{0:000}";
-
-        public const string CompilerServicesDiagnosticCategory = "Stride.CompilerServices";
-
-        public static DiagnosticDescriptor CompilerServicesUnhandledException = new DiagnosticDescriptor(
-            string.Format(CompilerServicesDiagnosticIdFormat, 1),
-            "An unhandled exception occurred",
-            "An {0} occurred while running Stride.Core.CompilerServices analyzer. {1}.",
-            CompilerServicesDiagnosticCategory,
-            DiagnosticSeverity.Error,
-            isEnabledByDefault: true);
     }
 
-    class BFNNexSyntaxReceiver : ISyntaxReceiver
+
+
+
+    public const string CompilerServicesDiagnosticIdFormat = "STR0{0:000}";
+
+    public const string CompilerServicesDiagnosticCategory = "Stride.CompilerServices";
+
+    public static DiagnosticDescriptor CompilerServicesUnhandledException = new DiagnosticDescriptor(
+        string.Format(CompilerServicesDiagnosticIdFormat, 1),
+        "An unhandled exception occurred",
+        "An {0} occurred while running Stride.Core.CompilerServices analyzer. {1}.",
+        CompilerServicesDiagnosticCategory,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+}
+
+class BFNNexSyntaxReceiver : ISyntaxReceiver
+{
+    ClassAttributeFinder finder = new();
+    StructAttributeFinder structFinder = new();
+    public List<ClassDeclarationSyntax> ClassDeclarations { get; private set; } = new();
+    public List<StructDeclarationSyntax> StructDeclarations { get; private set; } = new();
+
+    public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
     {
-        ClassAttributeFinder finder = new();
-        StructAttributeFinder structFinder = new();
-        public List<ClassDeclarationSyntax> ClassDeclarations { get; private set; } = new();
-        public List<StructDeclarationSyntax> StructDeclarations { get; private set; } = new();
+        //ClassDeclarations.Clear();
+        //StructDeclarations.Clear();
+        ClassDeclarationSyntax result = finder.FindAttribute(syntaxNode);
 
-        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
+        if (result != null && !IsAbstract(result))
         {
-            //ClassDeclarations.Clear();
-            //StructDeclarations.Clear();
-            ClassDeclarationSyntax result = finder.FindAttribute(syntaxNode);
 
-            if (result != null && !IsAbstract(result))
-            {
-
-                ClassDeclarations.Add(result);
-                
-            }
-            StructDeclarationSyntax structResult = structFinder.FindAttribute(syntaxNode);
-            if (structResult != null)
-            {
-                StructDeclarations.Add(structResult);
-            }
+            ClassDeclarations.Add(result);
+            
         }
-        public bool IsAbstract(ClassDeclarationSyntax classDeclaration)
+        StructDeclarationSyntax structResult = structFinder.FindAttribute(syntaxNode);
+        if (structResult != null)
         {
-            return classDeclaration.Modifiers.Any(x => x.IsKind(SyntaxKind.AbstractKeyword));
+            StructDeclarations.Add(structResult);
         }
+    }
+    public bool IsAbstract(ClassDeclarationSyntax classDeclaration)
+    {
+        return classDeclaration.Modifiers.Any(x => x.IsKind(SyntaxKind.AbstractKeyword));
     }
 }
