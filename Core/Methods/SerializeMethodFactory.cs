@@ -29,12 +29,21 @@ internal class SerializeMethodFactory
         foreach (IPropertySymbol inheritedProperty in symbols)
         {
             string propertyname = inheritedProperty.Name;
-            string type = inheritedProperty.Type.Name;
 
-            sb.Append($"""
+            if (inheritedProperty.Type.TypeKind == TypeKind.Array)
+            {
+                sb.Append($"""
+                     emitter.WriteString("{propertyname}", ScalarStyle.Plain);
+                     context.SerializeArray(ref emitter, value.{propertyname});
+                    """);
+            }
+            else
+            {
+                sb.Append($"""
                      emitter.WriteString("{propertyname}", ScalarStyle.Plain);
                      context.Serialize(ref emitter, value.{propertyname});
                     """);
+            }
             Add(propertyname);
 
             //   else if (inheritedProperty.Type.TypeKind == TypeKind.Struct)
@@ -60,28 +69,5 @@ internal class SerializeMethodFactory
         }
         """;
 
-    }
-
-    private List<string> SimpleTypes = new()
-    {
-        "int",
-        "Int32",
-        "string",
-        "String",
-        "float",
-        "double",
-        "long",
-        "UInt64",
-        "Int64",
-        "byte",
-        "Byte"
-    };
-    private string CreateSimpleType(string name, string type)
-    {
-        if (type == "string" || type == "String")
-            return $"mappedResult.Add({name}, objToSerialize.{name});";
-        if (type == "Guid")
-            return $"mappedResult.Add({name}, objToSerialize.{name}.ToString())";
-        return $"mappedResult.Add({name}, objToSerialize.{name}.ToString());";
     }
 }
