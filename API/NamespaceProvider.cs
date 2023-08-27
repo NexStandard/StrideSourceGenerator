@@ -20,33 +20,23 @@ sealed class NamespaceProvider<T>
     {
         new UsingDirective() {
             Name = " System",
-            MetadataName = "System",
-            NugetReference = "",
-            HelpLink = "https://stride-docs-test.azurewebsites.net/latest"
+            MetadataName = "System"
         },
         new UsingDirective() {
             Name = " VYaml.Parser",
             MetadataName = "VYaml.Parser",
-            NugetReference = "",
-            HelpLink = ""
         },
         new UsingDirective() {
             Name = " VYaml.Emitter",
             MetadataName = "VYaml.Emitter",
-            NugetReference = "",
-            HelpLink = ""
         },
         new UsingDirective() {
             Name = " VYaml.Serialization",
-            MetadataName = "VYaml.Serialization",
-            NugetReference = "",
-            HelpLink = ""
+            MetadataName = "VYaml.Serialization"
         },
         new UsingDirective() {
             Name = " System.Text",
-            MetadataName = "System.Text",
-            NugetReference = "",
-            HelpLink = ""
+            MetadataName = "System.Text"
         }
     };
     /// <summary>
@@ -126,7 +116,5 @@ sealed class NamespaceProvider<T>
     {
         public string Name { get; set; }
         public string MetadataName { get; set; }
-        public string NugetReference { get; set; }
-        public string HelpLink { get; set; }
     }
 }
