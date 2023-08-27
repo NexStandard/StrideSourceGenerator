@@ -12,11 +12,11 @@ internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
 {
     protected override ClassDeclarationSyntax CreateGenerator(ClassInfo<ClassDeclarationSyntax> classInfo)
     {
-        PropertyAttributeFinder finder = new PropertyAttributeFinder();
-        INamedTypeSymbol symbol = classInfo.Symbol;
-        IEnumerable<IPropertySymbol> properties = finder.FilterBasePropertiesRecursive(ref symbol);
+        var compilation = classInfo.ExecutionContext.Compilation.GetSemanticModel(classInfo.TypeSyntax.SyntaxTree);
+        var classSymbol = compilation.GetDeclaredSymbol(classInfo.TypeSyntax);
+        IEnumerable<IPropertySymbol> allProperties = PropertyAttributeFinder.FilterBasePropertiesRecursive(ref classSymbol);
         classInfo.SerializerSyntax = classInfo.SerializerSyntax.AddMembers(RegisterMethodFactory.GetRegisterMethod(classInfo)); ;
-        classInfo.SerializerSyntax =  AddMethodsToClass(classInfo.SerializerSyntax, properties, classInfo.TypeName);
+        classInfo.SerializerSyntax =  AddMethodsToClass(classInfo.SerializerSyntax, allProperties, classInfo.TypeName);
         return classInfo.SerializerSyntax;
     }
 
