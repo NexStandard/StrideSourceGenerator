@@ -22,7 +22,7 @@ internal class SerializeMethodFactory
         }
         PrivateProperties.Add($"private static readonly byte[] UTF8{name} = new byte[]{{{sb.ToString().Trim(',')}}};");
     }
-    public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix)
+    public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix,ClassDeclarationSyntax classInfo)
     {
 
         StringBuilder sb = new StringBuilder();
@@ -62,7 +62,7 @@ internal class SerializeMethodFactory
                 return;
             }
             emitter.BeginMapping();
-            emitter.Tag("!{{className}}");
+            emitter.Tag("!{{classInfo.Identifier.ToString()}}");
             {{sb}}
             emitter.EndMapping();
             

@@ -37,6 +37,11 @@ sealed class NamespaceProvider<T>
         new UsingDirective() {
             Name = " System.Text",
             MetadataName = "System.Text"
+        },
+        new UsingDirective()
+        {
+            Name =" Stride.Core",
+            MetadataName= "Stride.Core"
         }
     };
     /// <summary>

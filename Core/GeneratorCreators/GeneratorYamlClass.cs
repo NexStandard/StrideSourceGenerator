@@ -26,7 +26,8 @@ internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
     {
 
         writerFactory = new();
-        string res = writerFactory.ConvertToYamlTemplate(Enumerable.Empty<PropertyDeclarationSyntax>(), typeName,properties,GeneratorClassPrefix);
+        
+        string res = writerFactory.ConvertToYamlTemplate(Enumerable.Empty<PropertyDeclarationSyntax>(), typeName,properties,GeneratorClassPrefix,classContext);
         foreach (string privateProperty in writerFactory.PrivateProperties)
         {
             classContext = AddMember(classContext,privateProperty);
