@@ -62,7 +62,7 @@ internal class SerializeMethodFactory
                 return;
             }
             emitter.BeginMapping();
-            emitter.Tag("!{{classInfo.Identifier.ToString()}}");
+            emitter.Tag("!{{className}}");
             {{sb}}
             emitter.EndMapping();
             
