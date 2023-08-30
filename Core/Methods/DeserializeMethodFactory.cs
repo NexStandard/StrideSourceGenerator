@@ -37,6 +37,17 @@ internal class DeserializeMethodFactory
             {
                 if(counter == 0)
                 {
+                    if (propert.Type.TypeKind == TypeKind.Array)
+                    {
+                        
+                            switchFinder.Append($$"""
+                            if (key.SequenceEqual({{ "UTF8" + propert.Name}}))
+                            {
+                                parser.Read();
+                                temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
+                            }
+                            """);
+                    }
                     switchFinder.Append($$"""
                         if (key.SequenceEqual({{"UTF8" + propert.Name}}))
                         {
@@ -48,13 +59,28 @@ internal class DeserializeMethodFactory
                 }
                 else
                 {
-                    switchFinder.Append($$"""
+                    if (propert.Type.TypeKind == TypeKind.Array)
+                    {
+
+                        switchFinder.Append($$"""
+                            else if (key.SequenceEqual({{"UTF8" + propert.Name}}))
+                            {
+                                parser.Read();
+                                temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
+                            }
+                            """);
+                    }
+                    else
+                    {
+                        switchFinder.Append($$"""
                         else if (key.SequenceEqual({{"UTF8" + propert.Name}}))
                         {
                             parser.Read();
                             temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
                         }
                         """);
+                    }
+
                 }
                 
             }
