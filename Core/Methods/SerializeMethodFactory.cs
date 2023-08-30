@@ -33,14 +33,14 @@ internal class SerializeMethodFactory
             if (inheritedProperty.Type.TypeKind == TypeKind.Array)
             {
                 sb.Append($"""
-                     emitter.WriteString("{propertyname}", ScalarStyle.Plain);
+                     emitter.WriteString("{propertyname}", VYaml.Emitter.ScalarStyle.Plain);
                      context.SerializeArray(ref emitter, value.{propertyname});
                     """);
             }
             else
             {
                 sb.Append($"""
-                     emitter.WriteString("{propertyname}", ScalarStyle.Plain);
+                     emitter.WriteString("{propertyname}", VYaml.Emitter.ScalarStyle.Plain);
                      context.Serialize(ref emitter, value.{propertyname});
                     """);
             }
