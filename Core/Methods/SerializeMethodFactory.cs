@@ -32,10 +32,23 @@ internal class SerializeMethodFactory
 
             if (inheritedProperty.Type.TypeKind == TypeKind.Array)
             {
-                sb.Append($"""
+                IArrayTypeSymbol arrayType = (IArrayTypeSymbol)inheritedProperty.Type;
+
+                if (arrayType.ElementType.SpecialType == SpecialType.System_Byte)
+                {
+                    sb.Append($"""
+                     emitter.WriteString("{propertyname}", VYaml.Emitter.ScalarStyle.Plain);
+                     context.SerializeByteArray(ref emitter, value.{propertyname});
+                    """);
+                }
+                else
+                {
+                    sb.Append($"""
                      emitter.WriteString("{propertyname}", VYaml.Emitter.ScalarStyle.Plain);
                      context.SerializeArray(ref emitter, value.{propertyname});
                     """);
+                }
+
             }
             else
             {

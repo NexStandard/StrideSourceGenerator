@@ -39,22 +39,40 @@ internal class DeserializeMethodFactory
                 {
                     if (propert.Type.TypeKind == TypeKind.Array)
                     {
-                        
+                        IArrayTypeSymbol arrayType = (IArrayTypeSymbol)propert.Type;
+
+                        if (arrayType.ElementType.SpecialType == SpecialType.System_Byte)
+                        {
                             switchFinder.Append($$"""
-                            if (key.SequenceEqual({{ "UTF8" + propert.Name}}))
+                            if (key.SequenceEqual({{"UTF8" + propert.Name}}))
                             {
                                 parser.Read();
-                                temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
+                                temp{{propert.Name}} = context.DeserializeByteArray(ref parser);
                             }
                             """);
+                        }
+                        else
+                        {
+                            switchFinder.Append($$"""
+                            if (key.SequenceEqual({{"UTF8" + propert.Name}}))
+                            {
+                                parser.Read();
+                                temp{{propert.Name}} = context.DeserializeArray<{{arrayType.ElementType}}>(ref parser);
+                            }
+                            """);
+                        }
+
                     }
-                    switchFinder.Append($$"""
+                    else
+                    {
+                        switchFinder.Append($$"""
                         if (key.SequenceEqual({{"UTF8" + propert.Name}}))
                         {
                             parser.Read();
                             temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
                         }
                         """);
+                    }
                     counter = 1;
                 }
                 else
@@ -105,10 +123,6 @@ internal class DeserializeMethodFactory
                  {{defaultValues}}
          while (!parser.End && parser.CurrentEventType != ParseEventType.MappingEnd)
          {
-            if(parser.CurrentTokenType == TokenType.StreamEnd)
-            {
-                break;
-            }
              if (parser.CurrentEventType != ParseEventType.Scalar)
              {
                  throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
@@ -128,10 +142,8 @@ internal class DeserializeMethodFactory
                      continue;
              }
          }
-         if(!(parser.CurrentTokenType == TokenType.StreamEnd))
-         {
-            parser.ReadWithVerify(ParseEventType.MappingEnd);
-         }
+
+         parser.ReadWithVerify(ParseEventType.MappingEnd);
          return new {{className}}
          {
              {{objectCreation.ToString().Trim(',')}}
@@ -140,29 +152,4 @@ internal class DeserializeMethodFactory
          """;
 
     }
-
-    private List<string> SimpleTypes = new()
-    {
-        "int",
-        "Int32",
-        "string",
-        "String",
-        "float",
-        "double",
-        "long",
-        "UInt64",
-        "Int64",
-        "byte",
-        "Byte"
-    };
-    private string CreateSimpleType(string name, string type)
-    {
-        if (type == "int" || type == "Int32")
-            return $"{name} =  Int32.Parse(((YamlScalarNode)dictionaryDocument[\"{name}\"]).Value),";
-        if (type == "string" || type == "String")
-            return $"{name} =  dictionaryDocument[\"{name}\"].ToString(),";
-        // TODO: this is wrong, the other types need to get implemented
-        return $"{name} =  Int32.Parse(((YamlScalarNode)dictionaryDocument[\"{name}\"]).Value),";
-    }
-
 }
