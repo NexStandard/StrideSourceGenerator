@@ -105,6 +105,10 @@ internal class DeserializeMethodFactory
                  {{defaultValues}}
          while (!parser.End && parser.CurrentEventType != ParseEventType.MappingEnd)
          {
+            if(parser.CurrentTokenType == TokenType.StreamEnd)
+            {
+                break;
+            }
              if (parser.CurrentEventType != ParseEventType.Scalar)
              {
                  throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
@@ -124,7 +128,10 @@ internal class DeserializeMethodFactory
                      continue;
              }
          }
-         parser.ReadWithVerify(ParseEventType.MappingEnd);
+         if(!(parser.CurrentTokenType == TokenType.StreamEnd))
+         {
+            parser.ReadWithVerify(ParseEventType.MappingEnd);
+         }
          return new {{className}}
          {
              {{objectCreation.ToString().Trim(',')}}
