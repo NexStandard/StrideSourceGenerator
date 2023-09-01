@@ -65,9 +65,14 @@ internal class SerializeMethodFactory
             //       sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), new YamlScalarNode(objToSerialize.{propertyname}),");
             //   }
         }
-
+        string generic = "";
+        if (classInfo.TypeParameterList != null)
+        {
+            var typeParameters = classInfo.TypeParameterList.Parameters;
+            generic = "<" + string.Join(", ", typeParameters.Select(tp => tp.Identifier)) + ">";
+        }
         return $$"""
-        public void Serialize(ref Utf8YamlEmitter emitter, global::StrideSourceGened.{{className}}? value, YamlSerializationContext context)
+        public void Serialize{{generic}}(ref Utf8YamlEmitter emitter, global::StrideSourceGened.{{className+generic}}? value, YamlSerializationContext context)
         {
             if (value is null)
             {

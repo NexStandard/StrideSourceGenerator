@@ -13,6 +13,8 @@ internal class ClassInfo<T>
     public GeneratorExecutionContext ExecutionContext { get; set; }
     public T TypeSyntax { get; set; }
     public ClassDeclarationSyntax SerializerSyntax { get; set; }
+    public TypeParameterListSyntax Generics => TypeSyntax.TypeParameterList;
+
     public INamedTypeSymbol Symbol { get; set; }
     public string TypeName { get; set; }
     public string SerializerName { get; set; }
