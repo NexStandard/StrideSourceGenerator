@@ -14,13 +14,29 @@ internal class RegisterMethodFactory
     {
         StringBuilder builder = new StringBuilder();
         builder.AppendLine("public void Register(){");
-
+        AddItself(classInfo,builder);
         AddInterfaces(classInfo, builder);
         AddAbstractClasses(classInfo, builder);
 
         builder.AppendLine("}");
         return SyntaxFactory.ParseMemberDeclaration(builder.ToString());
     }
+
+    private void AddItself<T>(ClassInfo<T> classInfo, StringBuilder builder) where T : TypeDeclarationSyntax
+    {
+        if(classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
+        {
+            var str = new string(',', classInfo.Generics.Parameters.Count-1);
+            var generic = $"{classInfo.SerializerSyntax.Identifier.Text}<{str}>";
+            var genericOfType = $"{classInfo.TypeName}<{str}>";
+            builder.AppendLine($"NexYamlSerializerRegistry.Default.RegisterGenericFormatter(typeof({genericOfType}),typeof({generic}));");
+        }
+        else
+        {
+            builder.AppendLine("NexYamlSerializerRegistry.Default.RegisterFormatter(this);");
+        }
+    }
+
     protected void AddInterfaces<T>(ClassInfo<T> classInfo,StringBuilder builder)
         where T : TypeDeclarationSyntax
     {
@@ -28,7 +44,6 @@ internal class RegisterMethodFactory
 
         // Get the interfaces implemented by the class
         System.Collections.Immutable.ImmutableArray<INamedTypeSymbol> interfaces = classSymbol.AllInterfaces;
-        builder.AppendLine("NexYamlSerializerRegistry.Default.RegisterFormatter(this);");
         foreach (INamedTypeSymbol interfacei in interfaces)
         {
             builder.AppendLine($"NexYamlSerializerRegistry.Default.RegisterInterface(this,typeof({interfacei.Name}));");

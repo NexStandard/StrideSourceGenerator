@@ -6,6 +6,8 @@ using StrideSourceGenerator.Core.Methods;
 using StrideSourceGenerator.Core.Properties;
 using StrideSourceGenerator.Core.Roslyn;
 using StrideSourceGenerator.Core.Templates;
+using System.Linq;
+
 namespace StrideSourceGenerator.Core.GeneratorCreators;
 
 internal abstract class GeneratorBase<T>
@@ -36,7 +38,7 @@ internal abstract class GeneratorBase<T>
         normalNamespace = NamespaceProvider.AddUsingDirectivess(normalNamespace, classInfo.ExecutionContext);
         classInfo.SerializerSyntax = CreateGenerator(classInfo);
 
-        classInfo.SerializerSyntax = AddInterfaces(classInfo.SerializerSyntax, classInfo.TypeName);
+        classInfo.SerializerSyntax = AddInterfaces(classInfo.SerializerSyntax, classInfo.TypeName,classInfo);
         CompilationUnitSyntax compilationUnit = SyntaxFactory.CompilationUnit()
                                       .AddMembers(normalNamespace
                                       .AddMembers(classInfo.SerializerSyntax));
@@ -60,10 +62,23 @@ internal abstract class GeneratorBase<T>
         context = (T)context.AddMembers(SyntaxFactory.ParseMemberDeclaration(newMember));
         return context;
     }
-    protected ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className)
+    protected ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className,ClassInfo<T> classInfo)
     {
-        partialClass = partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IRegisterYamlFormatter")));
-        return partialClass.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlFormatter<{className}?>")));
+        classInfo.SerializerSyntax = classInfo.SerializerSyntax.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IRegisterYamlFormatter")));
+        return AddYamlFormatterInterface(classInfo);
+    }
+    protected ClassDeclarationSyntax AddYamlFormatterInterface(ClassInfo<T> classInfo)
+    {
+        if(classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
+        {
+            var typeParameterList = SyntaxFactory.TypeParameterList(classInfo.Generics.Parameters);
+
+            classInfo.SerializerSyntax = classInfo.SerializerSyntax.WithTypeParameterList(typeParameterList);
+            
+            var genericTypeName = SyntaxFactory.ParseTypeName($"{classInfo.TypeName}<{string.Join(", ", classInfo.Generics.Parameters)}>");
+            return classInfo.SerializerSyntax.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlFormatter<{genericTypeName}?>")));
+        }
+        return classInfo.SerializerSyntax.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlFormatter<{classInfo.TypeName}?>"))); ;
     }
 
 }

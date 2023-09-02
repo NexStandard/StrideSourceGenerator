@@ -71,7 +71,7 @@ public class NexGenerator : ISourceGenerator
         isEnabledByDefault: true);
 }
 
-class BFNNexSyntaxReceiver : ISyntaxReceiver
+public class BFNNexSyntaxReceiver : ISyntaxReceiver
 {
     ClassAttributeFinder finder = new();
     StructAttributeFinder structFinder = new();

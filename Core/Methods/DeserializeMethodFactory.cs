@@ -5,37 +5,80 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Xml.Linq;
+using StrideSourceGenerator.Core.Roslyn;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace StrideSourceGenerator.Core.Methods;
-internal class DeserializeMethodFactory
+internal class DeserializeMethodFactory : IDeserializeMethodFactory
 {
-    public string DeserializeMethodTemplate(string className, IEnumerable<IPropertySymbol> symbols)
+    public MemberDeclarationSyntax GetMethod(ClassInfo<ClassDeclarationSyntax> classInfo)
     {
         StringBuilder defaultValues = new StringBuilder();
-        Dictionary<int, List<IPropertySymbol>> map = new ();
+        IEnumerable<IPropertySymbol> properties = classInfo.AvailableProperties;
+        Dictionary<int, List<IPropertySymbol>> map = this.MapPropertiesToLength(properties);
         StringBuilder objectCreation = new StringBuilder();
-        foreach (IPropertySymbol property in symbols)
+        string generic = classInfo.TypeName;
+        if (classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
         {
-            int propertyLength = property.Name.Length;
-            defaultValues.Append("var temp").Append(property.Name).Append($"= default({property.Type});");
-            objectCreation.Append(property.Name+"="+"temp"+ property.Name+",");
-            if(!map.ContainsKey(propertyLength)) 
-            {
-                map.Add(propertyLength, new() { property});
-            }
-            else
-            {
-                map[propertyLength].Add(property);
-            }
+            var typeParameterList = SyntaxFactory.TypeParameterList(classInfo.Generics.Parameters);
+
+            classInfo.SerializerSyntax = classInfo.SerializerSyntax.WithTypeParameterList(typeParameterList);
+
+            generic = $"{classInfo.TypeName}<{string.Join(", ", classInfo.Generics.Parameters)}>";
         }
-        StringBuilder switchFinder = new StringBuilder();
-        foreach (KeyValuePair<int, List<IPropertySymbol>> prop in map)
+        foreach (IPropertySymbol property in properties)
         {
-            switchFinder.Append("case " + prop.Key+":");
+            defaultValues.Append("var temp").Append(property.Name).Append($"= default({property.Type});");
+            objectCreation.Append(property.Name + "=" + "temp" + property.Name + ",");
+        }
+        var x = $$"""
+             public {{generic}}? Deserialize(ref YamlParser parser, YamlDeserializationContext context)
+             {
+                 if (parser.IsNullScalar())
+                 {
+                     parser.Read();
+                     return default;
+                 }
+                 parser.ReadWithVerify(ParseEventType.MappingStart);
+                 {{defaultValues}}
+         {{MapPropertiesToSwitch(map)}}
+
+         parser.ReadWithVerify(ParseEventType.MappingEnd);
+         return new {{generic}}
+         {
+             {{objectCreation.ToString().Trim(',')}}
+         };
+         }
+         """;
+        return SyntaxFactory.ParseMemberDeclaration(x);
+    }
+    public StringBuilder MapPropertiesToSwitch(Dictionary<int, List<IPropertySymbol>> properties)
+    {
+        StringBuilder switchFinder = new StringBuilder();
+        switchFinder.Append($$"""
+                while (!parser.End && parser.CurrentEventType != ParseEventType.MappingEnd)
+                {
+                    if (parser.CurrentEventType != ParseEventType.Scalar)
+                    {
+                        throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
+                    }
+                
+                    if (!parser.TryGetScalarAsSpan(out var key))
+                    {
+                        throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
+                    }
+                
+                    switch (key.Length)
+                    {
+                """);
+        foreach (KeyValuePair<int, List<IPropertySymbol>> prop in properties)
+        {
+
+            switchFinder.Append("case " + prop.Key + ":");
             int counter = 0;
-            foreach(IPropertySymbol propert in prop.Value)
+            foreach (IPropertySymbol propert in prop.Value)
             {
-                if(counter == 0)
+                if (counter == 0)
                 {
                     if (propert.Type.TypeKind == TypeKind.Array)
                     {
@@ -100,7 +143,7 @@ internal class DeserializeMethodFactory
                     }
 
                 }
-                
+
             }
             switchFinder.Append("""
                 else
@@ -111,45 +154,14 @@ internal class DeserializeMethodFactory
                 continue;
                 """);
         }
-        return $$"""
-             public {{className}}? Deserialize(ref YamlParser parser, YamlDeserializationContext context)
-             {
-                 if (parser.IsNullScalar())
-                 {
-                     parser.Read();
-                     return default;
-                 }
-                 parser.ReadWithVerify(ParseEventType.MappingStart);
-                 {{defaultValues}}
-         while (!parser.End && parser.CurrentEventType != ParseEventType.MappingEnd)
-         {
-             if (parser.CurrentEventType != ParseEventType.Scalar)
-             {
-                 throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
-             }
-
-             if (!parser.TryGetScalarAsSpan(out var key))
-             {
-                 throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
-             }
-
-             switch (key.Length)
-             {
-             {{switchFinder}}
-                 default:
-                     parser.Read();
-                     parser.SkipCurrentNode();
-                     continue;
-             }
-         }
-
-         parser.ReadWithVerify(ParseEventType.MappingEnd);
-         return new {{className}}
-         {
-             {{objectCreation.ToString().Trim(',')}}
-         };
-         }
-         """;
-
+        switchFinder.Append($$"""
+        default:
+                    parser.Read();
+                    parser.SkipCurrentNode();
+                    continue;
+            }
+        }
+        """);
+        return switchFinder;
     }
 }

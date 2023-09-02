@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using StrideSourceGenerator.Core.Roslyn;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +23,17 @@ internal class SerializeMethodFactory
         }
         PrivateProperties.Add($"private static readonly byte[] UTF8{name} = new byte[]{{{sb.ToString().Trim(',')}}};");
     }
-    public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix,ClassDeclarationSyntax classInfo)
+    public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix,ClassDeclarationSyntax classInfo,ClassInfo<ClassDeclarationSyntax> realClassInfo)
     {
+        string generic = className;
+        if (realClassInfo.Generics != null && realClassInfo.Generics.Parameters.Count > 0)
+        {
+            var typeParameterList = SyntaxFactory.TypeParameterList(realClassInfo.Generics.Parameters);
+
+            realClassInfo.SerializerSyntax = realClassInfo.SerializerSyntax.WithTypeParameterList(typeParameterList);
+
+            generic = $"{realClassInfo.TypeName}<{string.Join(", ", realClassInfo.Generics.Parameters)}>";
+        }
 
         StringBuilder sb = new StringBuilder();
         foreach (IPropertySymbol inheritedProperty in symbols)
@@ -65,14 +75,9 @@ internal class SerializeMethodFactory
             //       sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), new YamlScalarNode(objToSerialize.{propertyname}),");
             //   }
         }
-        string generic = "";
-        if (classInfo.TypeParameterList != null)
-        {
-            var typeParameters = classInfo.TypeParameterList.Parameters;
-            generic = "<" + string.Join(", ", typeParameters.Select(tp => tp.Identifier)) + ">";
-        }
-        return $$"""
-        public void Serialize{{generic}}(ref Utf8YamlEmitter emitter, global::StrideSourceGened.{{className+generic}}? value, YamlSerializationContext context)
+
+            return $$"""
+        public void Serialize(ref Utf8YamlEmitter emitter, global::StrideSourceGened.{{generic}}? value, YamlSerializationContext context)
         {
             if (value is null)
             {
@@ -80,7 +85,7 @@ internal class SerializeMethodFactory
                 return;
             }
             emitter.BeginMapping();
-            emitter.Tag("!{{className}}");
+            emitter.Tag($"!{typeof({{generic}})}");
             {{sb}}
             emitter.EndMapping();
             
