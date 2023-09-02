@@ -77,7 +77,7 @@ internal class SerializeMethodFactory
         }
 
             return $$"""
-        public void Serialize(ref Utf8YamlEmitter emitter, global::StrideSourceGened.{{generic}}? value, YamlSerializationContext context)
+        public void Serialize(ref Utf8YamlEmitter emitter, {{generic}}? value, YamlSerializationContext context)
         {
             if (value is null)
             {
