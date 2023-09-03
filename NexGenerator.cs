@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using StrideSourceGenerator.Core.GeneratorCreators;
 using StrideSourceGenerator.Core.Roslyn;
 using System.Diagnostics;
-using StrideSourceGenerator.AttributeFinder;
 using System.Linq;
+using StrideSourceGenerator.Core;
 
 namespace StrideSourceGenerator;
 

@@ -7,6 +7,7 @@ using StrideSourceGenerator.Core.Properties;
 using StrideSourceGenerator.Core.Roslyn;
 using StrideSourceGenerator.Core.Templates;
 using System.Linq;
+using static StrideSourceGenerator.API.NamespaceProvider;
 
 namespace StrideSourceGenerator.Core.GeneratorCreators;
 
@@ -15,7 +16,7 @@ internal abstract class GeneratorBase
     protected ITemplateProvider TagTemplate = new TagTemplateProvider();
     protected ITemplateProvider TypeTemplate = new TypeTemplateProvider();
     protected PropertyAttributeFinder PropertyFinder { get; } = new();
-    private NamespaceProvider NamespaceProvider { get; } = new();
+    private NamespaceProvider NamespaceProvider { get; }
     protected SerializeMethodFactory writerFactory;
     protected DeserializeMethodFactory DeserializeMethodFactory = new();
     protected RegisterMethodFactory RegisterMethodFactory { get; } = new();
@@ -23,6 +24,15 @@ internal abstract class GeneratorBase
 
     public bool StartCreation(ClassInfo classInfo)
     {
+        NamespaceProvider.Usings = new System.Collections.Generic.List<string>()
+        {
+            " System",
+            " VYaml.Parser",
+            " VYaml.Emitter",
+            " VYaml.Serialization",
+            " System.Text",
+            " Stride.Core",
+        };
         classInfo.TypeName = GetIdentifierName(classInfo.TypeSyntax);
         classInfo.SerializerName = GeneratorClassPrefix + classInfo.TypeName;
 
@@ -37,7 +47,7 @@ internal abstract class GeneratorBase
         normalNamespace = NamespaceProvider.AddUsingDirectivess(normalNamespace, classInfo.ExecutionContext);
         classInfo.SerializerSyntax = CreateGenerator(classInfo);
 
-        classInfo.SerializerSyntax = AddInterfaces(classInfo.SerializerSyntax, classInfo.TypeName,classInfo);
+        classInfo.SerializerSyntax = AddInterfaces(classInfo.SerializerSyntax, classInfo.TypeName, classInfo);
         CompilationUnitSyntax compilationUnit = SyntaxFactory.CompilationUnit()
                                       .AddMembers(normalNamespace
                                       .AddMembers(classInfo.SerializerSyntax));
@@ -57,24 +67,24 @@ internal abstract class GeneratorBase
         return classDeclaration.Identifier.ValueText;
     }
     protected T AddMember<T>(T context, string newMember)
-        where T: TypeDeclarationSyntax
+        where T : TypeDeclarationSyntax
     {
         context = (T)context.AddMembers(SyntaxFactory.ParseMemberDeclaration(newMember));
         return context;
     }
-    protected ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className,ClassInfo classInfo)
+    protected ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className, ClassInfo classInfo)
     {
         classInfo.SerializerSyntax = classInfo.SerializerSyntax.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IRegisterYamlFormatter")));
         return AddYamlFormatterInterface(classInfo);
     }
     protected ClassDeclarationSyntax AddYamlFormatterInterface(ClassInfo classInfo)
     {
-        if(classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
+        if (classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
         {
             var typeParameterList = SyntaxFactory.TypeParameterList(classInfo.Generics.Parameters);
 
             classInfo.SerializerSyntax = classInfo.SerializerSyntax.WithTypeParameterList(typeParameterList);
-            
+
             var genericTypeName = SyntaxFactory.ParseTypeName($"{classInfo.TypeName}<{string.Join(", ", classInfo.Generics.Parameters)}>");
             return classInfo.SerializerSyntax.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlFormatter<{genericTypeName}?>")));
         }

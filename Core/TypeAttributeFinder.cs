@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StrideSourceGenerator.AttributeFinder;
+namespace StrideSourceGenerator.Core;
 internal class TypeAttributeFinder
 {
     List<string> allowedAttributes = new List<string>()
@@ -16,7 +16,7 @@ internal class TypeAttributeFinder
     };
     public TypeDeclarationSyntax FindAttribute(SyntaxNode syntaxNode)
     {
-        if(syntaxNode is TypeDeclarationSyntax typeSyntax)
+        if (syntaxNode is TypeDeclarationSyntax typeSyntax)
         {
             AttributeSyntax attribute = typeSyntax.AttributeLists
                     .SelectMany(al => al.Attributes)
