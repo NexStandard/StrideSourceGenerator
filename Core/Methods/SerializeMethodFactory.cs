@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using StrideSourceGenerator.Core.Roslyn;
+using StrideSourceGenerator.Core.Templates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,13 +27,17 @@ internal class SerializeMethodFactory
     public string ConvertToYamlTemplate(ClassInfo realClassInfo)
     {
         string generic = realClassInfo.TypeName;
+        string tag = $" emitter.Tag($\"!{{typeof({realClassInfo.TypeName})}}\");";
+        
         if (realClassInfo.Generics != null && realClassInfo.Generics.Parameters.Count > 0)
         {
             TypeParameterListSyntax typeParameterList = SyntaxFactory.TypeParameterList(realClassInfo.Generics.Parameters);
-
             realClassInfo.SerializerSyntax = realClassInfo.SerializerSyntax.WithTypeParameterList(typeParameterList);
 
             generic = $"{realClassInfo.TypeName}<{string.Join(", ", realClassInfo.Generics.Parameters)}>";
+            tag = $$"""
+                emitter.Tag($"!{typeof({{generic}})}".Replace('`','$'));
+                """;
         }
 
         StringBuilder sb = new StringBuilder();
@@ -75,7 +80,6 @@ internal class SerializeMethodFactory
             //       sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), new YamlScalarNode(objToSerialize.{propertyname}),");
             //   }
         }
-
             return $$"""
         public void Serialize(ref Utf8YamlEmitter emitter, {{generic}}? value, YamlSerializationContext context)
         {
@@ -85,7 +89,7 @@ internal class SerializeMethodFactory
                 return;
             }
             emitter.BeginMapping();
-            emitter.Tag($"!{typeof({{generic}})}");
+            {{tag}}
             {{sb}}
             emitter.EndMapping();
             

@@ -29,10 +29,11 @@ internal class RegisterMethodFactory
             string generic = $"{classInfo.SerializerSyntax.Identifier.Text}<{str}>";
             string genericOfType = $"{classInfo.TypeName}<{str}>";
             builder.AppendLine($"NexYamlSerializerRegistry.Default.RegisterGenericFormatter(typeof({genericOfType}),typeof({generic}));");
+            builder.AppendLine($"NexYamlSerializerRegistry.Default.RegisterFormatter(typeof({classInfo.TypeName+"<"+str+">"}));");
         }
         else
         {
-            builder.AppendLine("NexYamlSerializerRegistry.Default.RegisterFormatter(this);");
+            builder.AppendLine($"NexYamlSerializerRegistry.Default.RegisterFormatter(this);");
         }
     }
 

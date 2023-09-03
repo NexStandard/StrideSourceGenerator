@@ -12,6 +12,6 @@ internal class TagTemplateProvider : ITemplateProvider
 {
     public MemberDeclarationSyntax GetTemplate(string className)
     {
-        return SyntaxFactory.ParseMemberDeclaration($"public string IdentifierTag {{ get; }} = \"!{className}\";");
+        return SyntaxFactory.ParseMemberDeclaration($"public string IdentifierTag {{ get; }} = typeof({className}).Name.Replace('`','$';");
     }
 }

@@ -22,6 +22,9 @@ internal class PropertyAttributeFinder
     /// Walks through a base class of a class and retrieves all allowed Properties.
     /// Then it tries to get it's own base class and get from it all allowed Properties recursively.
     /// All the Properties get summed up.
+    /// If they fulfill :
+    ///     Proper Accessors <see cref="PropertyHasAllowedAccessors(IPropertySymbol)"/>
+    ///     Shouldnt be Ignored <see cref="HasDataMemberIgnoreAttribute(IPropertySymbol)"/>
     /// </summary>
     /// <param name="currentBaseType">The base class which the ClassDeclarationSyntax has</param>
     /// <returns>All allowed Properties in any base class in the inheritance tree</returns>
@@ -30,22 +33,14 @@ internal class PropertyAttributeFinder
         List<IPropertySymbol> result = new List<IPropertySymbol>();
         while (currentBaseType != null)
         {
-            result.AddRange(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(GetPropertiesWithAllowedAccessors()));
+            result.AddRange(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(PropertyHasAllowedAccessors).Where(prop => !HasDataMemberIgnoreAttribute(prop)));
             currentBaseType = currentBaseType.BaseType;
         }
         return result;
     }
-    /// <summary>
-    /// Retrieves a delegate that filters properties based on their accessibility and accessor types.
-    /// </summary>
-    /// <returns>
-    /// A <see cref="Func{IPropertySymbol, Boolean}"/> delegate that returns <c>true</c> for properties that have allowed accessors,
-    /// and <c>false</c> otherwise.
-    /// </returns>
-    private static Func<IPropertySymbol, bool> GetPropertiesWithAllowedAccessors()
+
+    private static bool PropertyHasAllowedAccessors(IPropertySymbol propertyInfo)
     {
-        return propertyInfo =>
-        {
             if (propertyInfo == null)
                 return false;
             return (propertyInfo.SetMethod?.DeclaredAccessibility == Accessibility.Public ||
@@ -56,6 +51,24 @@ internal class PropertyAttributeFinder
                     (propertyInfo.GetMethod?.DeclaredAccessibility == Accessibility.Public ||
                     propertyInfo.GetMethod?.DeclaredAccessibility == Accessibility.Internal);
 
-        };
+        
+    }
+    private static bool HasDataMemberIgnoreAttribute(IPropertySymbol property)
+    {
+            var attributes = property.GetAttributes();
+            foreach (var attribute in attributes)
+            {
+                var attributeType = attribute.AttributeClass;
+                if (attributeType != null)
+                {
+                    if (attributeType.Name == "DataMemberIgnore" &&
+                        (attributeType.ContainingNamespace.Name == "Stride.Core"))
+                    {
+                        // Check if it's the desired attribute
+                        return true;
+                    }
+                }
+            }
+            return false;  
     }
 }
