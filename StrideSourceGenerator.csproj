@@ -15,5 +15,9 @@
 	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Core\AttributeFinder\" />
+  </ItemGroup>
+
 
 </Project>
