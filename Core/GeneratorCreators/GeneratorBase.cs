@@ -16,7 +16,7 @@ internal abstract class GeneratorBase
     protected ITemplateProvider TagTemplate = new TagTemplateProvider();
     protected ITemplateProvider TypeTemplate = new TypeTemplateProvider();
     protected PropertyAttributeFinder PropertyFinder { get; } = new();
-    private NamespaceProvider NamespaceProvider { get; }
+    private NamespaceProvider NamespaceProvider { get; } = new();
     protected SerializeMethodFactory writerFactory;
     protected DeserializeMethodFactory DeserializeMethodFactory = new();
     protected RegisterMethodFactory RegisterMethodFactory { get; } = new();
