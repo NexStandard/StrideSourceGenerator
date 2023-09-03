@@ -9,8 +9,7 @@ using System.Text;
 namespace StrideSourceGenerator.Core.Methods;
 internal class RegisterMethodFactory
 {
-    public MemberDeclarationSyntax GetRegisterMethod<T>(ClassInfo<T> classInfo)
-        where T : TypeDeclarationSyntax
+    public MemberDeclarationSyntax GetRegisterMethod(ClassInfo classInfo)
     {
         StringBuilder builder = new StringBuilder();
         builder.AppendLine("public void Register(){");
@@ -22,7 +21,7 @@ internal class RegisterMethodFactory
         return SyntaxFactory.ParseMemberDeclaration(builder.ToString());
     }
 
-    private void AddItself<T>(ClassInfo<T> classInfo, StringBuilder builder) where T : TypeDeclarationSyntax
+    private void AddItself(ClassInfo classInfo, StringBuilder builder) 
     {
         if(classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
         {
@@ -37,8 +36,7 @@ internal class RegisterMethodFactory
         }
     }
 
-    protected void AddInterfaces<T>(ClassInfo<T> classInfo,StringBuilder builder)
-        where T : TypeDeclarationSyntax
+    protected void AddInterfaces(ClassInfo classInfo,StringBuilder builder)
     {
         ITypeSymbol classSymbol = classInfo.Symbol;
 
@@ -49,8 +47,7 @@ internal class RegisterMethodFactory
             builder.AppendLine($"NexYamlSerializerRegistry.Default.RegisterInterface(this,typeof({interfacei.Name}));");
         }
     }
-    protected void AddAbstractClasses<T>(ClassInfo<T> classInfo, StringBuilder builder)
-        where T : TypeDeclarationSyntax
+    protected void AddAbstractClasses(ClassInfo classInfo, StringBuilder builder)
     {
         ITypeSymbol classSymbol = classInfo.Symbol;
         if(classSymbol.IsAbstract)

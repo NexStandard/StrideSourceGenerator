@@ -8,7 +8,7 @@ using System.Text;
 namespace StrideSourceGenerator.Core.Methods;
 public interface IDeserializeMethodFactory
 {
-    public MemberDeclarationSyntax GetMethod(ClassInfo<ClassDeclarationSyntax> classInfo);
+    public MemberDeclarationSyntax GetMethod(ClassInfo classInfo);
     
 }
 public static class DeserializeMethodExtension

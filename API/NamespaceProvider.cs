@@ -13,8 +13,7 @@ namespace StrideSourceGenerator.API;
 /// Provides utility methods for handling namespace-related operations during code generation.
 /// </summary>
 /// <typeparam name="T">The type of <c>TypeDeclarationSyntax</c> that the class handles.</typeparam>
-sealed class NamespaceProvider<T>
-    where T : TypeDeclarationSyntax
+sealed class NamespaceProvider
 {
     public List<UsingDirective> Usings { get; set; } = new List<UsingDirective>()
     {
@@ -53,7 +52,7 @@ sealed class NamespaceProvider<T>
     /// A new <see cref="NamespaceDeclarationSyntax"/>  or <c>null</c> if the <see cref="TypeSyntax"/> is declared in the default namespace.
     /// A diagnostics error will be reported that the default namespace is not allowed
     /// </returns>
-    public NamespaceDeclarationSyntax GetNamespaceFromSyntaxNode(ClassInfo<T> classInfo)
+    public NamespaceDeclarationSyntax GetNamespaceFromSyntaxNode(ClassInfo classInfo)
     {
         SyntaxNode syntaxNode = classInfo.TypeSyntax;
         while (syntaxNode != null)

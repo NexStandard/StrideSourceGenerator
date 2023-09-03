@@ -23,9 +23,9 @@ internal class SerializeMethodFactory
         }
         PrivateProperties.Add($"private static readonly byte[] UTF8{name} = new byte[]{{{sb.ToString().Trim(',')}}};");
     }
-    public string ConvertToYamlTemplate(IEnumerable<PropertyDeclarationSyntax> properties, string className, IEnumerable<IPropertySymbol> symbols,string serializerClassNamePrefix,ClassDeclarationSyntax classInfo,ClassInfo<ClassDeclarationSyntax> realClassInfo)
+    public string ConvertToYamlTemplate(ClassInfo realClassInfo)
     {
-        string generic = className;
+        string generic = realClassInfo.TypeName;
         if (realClassInfo.Generics != null && realClassInfo.Generics.Parameters.Count > 0)
         {
             var typeParameterList = SyntaxFactory.TypeParameterList(realClassInfo.Generics.Parameters);
@@ -36,7 +36,7 @@ internal class SerializeMethodFactory
         }
 
         StringBuilder sb = new StringBuilder();
-        foreach (IPropertySymbol inheritedProperty in symbols)
+        foreach (IPropertySymbol inheritedProperty in realClassInfo.AvailableProperties)
         {
             string propertyname = inheritedProperty.Name;
 

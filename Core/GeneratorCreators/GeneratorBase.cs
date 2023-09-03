@@ -10,19 +10,18 @@ using System.Linq;
 
 namespace StrideSourceGenerator.Core.GeneratorCreators;
 
-internal abstract class GeneratorBase<T>
-    where T : TypeDeclarationSyntax
+internal abstract class GeneratorBase
 {
     protected ITemplateProvider TagTemplate = new TagTemplateProvider();
     protected ITemplateProvider TypeTemplate = new TypeTemplateProvider();
     protected PropertyAttributeFinder PropertyFinder { get; } = new();
-    private NamespaceProvider<T> NamespaceProvider { get; } = new();
+    private NamespaceProvider NamespaceProvider { get; } = new();
     protected SerializeMethodFactory writerFactory;
     protected DeserializeMethodFactory DeserializeMethodFactory = new();
     protected RegisterMethodFactory RegisterMethodFactory { get; } = new();
     protected abstract string GeneratorClassPrefix { get; }
 
-    public bool StartCreation(ClassInfo<T> classInfo)
+    public bool StartCreation(ClassInfo classInfo)
     {
         classInfo.TypeName = GetIdentifierName(classInfo.TypeSyntax);
         classInfo.SerializerName = GeneratorClassPrefix + classInfo.TypeName;
@@ -51,23 +50,24 @@ internal abstract class GeneratorBase<T>
         classInfo.ExecutionContext.AddSource($"{classInfo.SerializerName}_{namespaceName}.g.cs", sourceText);
         return true;
     }
-    protected abstract ClassDeclarationSyntax CreateGenerator(ClassInfo<T> classInfo);
+    protected abstract ClassDeclarationSyntax CreateGenerator(ClassInfo classInfo);
 
     protected string GetIdentifierName(TypeDeclarationSyntax classDeclaration)
     {
         return classDeclaration.Identifier.ValueText;
     }
-    protected T AddMember(T context, string newMember)
+    protected T AddMember<T>(T context, string newMember)
+        where T: TypeDeclarationSyntax
     {
         context = (T)context.AddMembers(SyntaxFactory.ParseMemberDeclaration(newMember));
         return context;
     }
-    protected ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className,ClassInfo<T> classInfo)
+    protected ClassDeclarationSyntax AddInterfaces(ClassDeclarationSyntax partialClass, string className,ClassInfo classInfo)
     {
         classInfo.SerializerSyntax = classInfo.SerializerSyntax.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IRegisterYamlFormatter")));
         return AddYamlFormatterInterface(classInfo);
     }
-    protected ClassDeclarationSyntax AddYamlFormatterInterface(ClassInfo<T> classInfo)
+    protected ClassDeclarationSyntax AddYamlFormatterInterface(ClassInfo classInfo)
     {
         if(classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
         {

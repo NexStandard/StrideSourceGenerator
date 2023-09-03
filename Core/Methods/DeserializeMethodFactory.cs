@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace StrideSourceGenerator.Core.Methods;
 internal class DeserializeMethodFactory : IDeserializeMethodFactory
 {
-    public MemberDeclarationSyntax GetMethod(ClassInfo<ClassDeclarationSyntax> classInfo)
+    public MemberDeclarationSyntax GetMethod(ClassInfo classInfo)
     {
         StringBuilder defaultValues = new StringBuilder();
         IEnumerable<IPropertySymbol> properties = classInfo.AvailableProperties;

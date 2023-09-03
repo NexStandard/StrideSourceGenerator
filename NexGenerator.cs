@@ -17,19 +17,19 @@ public class NexGenerator : ISourceGenerator
     public void Initialize(GeneratorInitializationContext context)
     {
         // Debugger.Launch();
-        context.RegisterForSyntaxNotifications(() => new BFNNexSyntaxReceiver());
+        context.RegisterForSyntaxNotifications(() => new NexSyntaxReceiver());
     }
     private GeneratorYamlClass classGenerator { get; set; } = new();
     public void Execute(GeneratorExecutionContext context)
     {
         try
         {
-            BFNNexSyntaxReceiver syntaxReceiver = (BFNNexSyntaxReceiver)context.SyntaxReceiver;
+            NexSyntaxReceiver syntaxReceiver = (NexSyntaxReceiver)context.SyntaxReceiver;
 
-            foreach (ClassDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
+            foreach (TypeDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
             {
                 SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
-                ClassInfo<ClassDeclarationSyntax> info = new ClassInfo<ClassDeclarationSyntax>()
+                ClassInfo info = new ClassInfo()
                 {
                     ExecutionContext = context,
                     TypeSyntax = classDeclaration,
@@ -38,10 +38,6 @@ public class NexGenerator : ISourceGenerator
 
                 };
                 classGenerator.StartCreation(info);
-            }
-            foreach (StructDeclarationSyntax structDeclaration in syntaxReceiver.StructDeclarations)
-            {
-                // classGenerator.StartCreation(context, structDeclaration,syntaxReceiver);
             }
         }
         catch (Exception ex)
@@ -71,33 +67,20 @@ public class NexGenerator : ISourceGenerator
         isEnabledByDefault: true);
 }
 
-public class BFNNexSyntaxReceiver : ISyntaxReceiver
+public class NexSyntaxReceiver : ISyntaxReceiver
 {
-    ClassAttributeFinder finder = new();
-    StructAttributeFinder structFinder = new();
-    public List<ClassDeclarationSyntax> ClassDeclarations { get; private set; } = new();
-    public List<StructDeclarationSyntax> StructDeclarations { get; private set; } = new();
+    TypeAttributeFinder typeFinder = new();
+    public List<TypeDeclarationSyntax> ClassDeclarations { get; private set; } = new();
 
     public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
     {
         //ClassDeclarations.Clear();
         //StructDeclarations.Clear();
-        ClassDeclarationSyntax result = finder.FindAttribute(syntaxNode);
+        TypeDeclarationSyntax result = typeFinder.FindAttribute(syntaxNode);
 
-        if (result != null && !IsAbstract(result))
+        if (result != null)
         {
-
             ClassDeclarations.Add(result);
-            
         }
-        StructDeclarationSyntax structResult = structFinder.FindAttribute(syntaxNode);
-        if (structResult != null)
-        {
-            StructDeclarations.Add(structResult);
-        }
-    }
-    public bool IsAbstract(ClassDeclarationSyntax classDeclaration)
-    {
-        return classDeclaration.Modifiers.Any(x => x.IsKind(SyntaxKind.AbstractKeyword));
     }
 }

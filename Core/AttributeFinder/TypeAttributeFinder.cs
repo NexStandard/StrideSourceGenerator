@@ -6,28 +6,22 @@ using System.Linq;
 using System.Text;
 
 namespace StrideSourceGenerator.AttributeFinder;
-internal class ClassAttributeFinder
+internal class TypeAttributeFinder
 {
     List<string> allowedAttributes = new List<string>()
     {
         "Stride.Core.DataContract",
-        "DataContract",
-        "System.Runtime.Serialization.DataContract"
+        // Needs to be decided later if its the Stride.Core.DataContract or not, it cant be decided in the Syntax Receiver
+        "DataContract"
     };
-    public ClassDeclarationSyntax FindAttribute(SyntaxNode syntaxNode)
+    public TypeDeclarationSyntax FindAttribute(SyntaxNode syntaxNode)
     {
-        switch (syntaxNode)
+        if(syntaxNode is TypeDeclarationSyntax typeSyntax)
         {
-            case ClassDeclarationSyntax classDeclaration:
-                AttributeSyntax attribute = classDeclaration.AttributeLists
+            AttributeSyntax attribute = typeSyntax.AttributeLists
                     .SelectMany(al => al.Attributes)
                     .FirstOrDefault(a => allowedAttributes.Contains(a.Name.ToString()));
-
-                if (attribute != null)
-                {
-                    return classDeclaration;
-                }
-                break;
+            return typeSyntax;
         }
         return null;
     }

@@ -8,11 +8,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using StrideSourceGenerator.Core.Properties;
 
 namespace StrideSourceGenerator.Core.Roslyn;
-public class ClassInfo<T>
-    where T : TypeDeclarationSyntax
+public class ClassInfo
 {
     public GeneratorExecutionContext ExecutionContext { get; set; }
-    public T TypeSyntax { get; set; }
+    public TypeDeclarationSyntax TypeSyntax { get; set; }
     public ClassDeclarationSyntax SerializerSyntax { get; set; }
     public TypeParameterListSyntax Generics => TypeSyntax.TypeParameterList;
 
@@ -20,7 +19,7 @@ public class ClassInfo<T>
     public string TypeName { get; set; }
     public string SerializerName { get; set; }
     public string NamespaceName { get; set; }
-    public BFNNexSyntaxReceiver SyntaxReceiver { get; set; }
+    public NexSyntaxReceiver SyntaxReceiver { get; set; }
     public SemanticModel SemanticModel { get => _compilationCache ??= ExecutionContext.Compilation.GetSemanticModel(TypeSyntax.SyntaxTree); }
     private SemanticModel _compilationCache;
     private List<IPropertySymbol> _propertyCache;
@@ -36,5 +35,9 @@ public class ClassInfo<T>
             }
         }
      }
+    public bool IsAbstract()
+    {
+        return TypeSyntax.Modifiers.Any(x => x.IsKind(SyntaxKind.AbstractKeyword));
+    }
 
 }

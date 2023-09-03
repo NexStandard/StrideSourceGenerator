@@ -8,9 +8,9 @@ using StrideSourceGenerator.Core.Roslyn;
 using StrideSourceGenerator.Core.Properties;
 
 namespace StrideSourceGenerator.Core.GeneratorCreators;
-internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
+internal class GeneratorYamlClass : GeneratorBase
 {
-    protected override ClassDeclarationSyntax CreateGenerator(ClassInfo<ClassDeclarationSyntax> classInfo)
+    protected override ClassDeclarationSyntax CreateGenerator(ClassInfo classInfo)
     {
         IEnumerable<IPropertySymbol> allProperties = classInfo.AvailableProperties;
         classInfo.SerializerSyntax = classInfo.SerializerSyntax.AddMembers(RegisterMethodFactory.GetRegisterMethod(classInfo));
@@ -20,12 +20,12 @@ internal class GeneratorYamlClass : GeneratorBase<ClassDeclarationSyntax>
 
     protected override string GeneratorClassPrefix { get; } = "GeneratedYamlSerializer";
 
-    protected ClassDeclarationSyntax AddMethodsToClass(IEnumerable<IPropertySymbol> properties, ClassInfo<ClassDeclarationSyntax> classInfo)
+    protected ClassDeclarationSyntax AddMethodsToClass(IEnumerable<IPropertySymbol> properties, ClassInfo classInfo)
     {
 
         writerFactory = new();
         
-        string res = writerFactory.ConvertToYamlTemplate(Enumerable.Empty<PropertyDeclarationSyntax>(), classInfo.TypeName,properties,GeneratorClassPrefix,classInfo.TypeSyntax,classInfo);
+        string res = writerFactory.ConvertToYamlTemplate(classInfo);
         foreach (string privateProperty in writerFactory.PrivateProperties)
         {
             classInfo.SerializerSyntax = AddMember(classInfo.SerializerSyntax,privateProperty);
