@@ -61,10 +61,10 @@ sealed class NamespaceProvider
     private static void ReportNoNamespaceError(TypeDeclarationSyntax classDeclaration, GeneratorExecutionContext context, string className)
     {
         DiagnosticDescriptor error = new DiagnosticDescriptor(
-            id: "SYSG001",
+            id: string.Format(NexGenerator.CompilerServicesDiagnosticIdFormat, 1),
             title: "Missing Namespace",
             messageFormat: $"The class {className} is not declared in a namespace. The global namespace is not allowed.",
-            category: "Stride.Yaml.CompilerServices",
+            category: NexGenerator.CompilerServicesDiagnosticCategory,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true,
             description: $"The class {className} is not declared in a namespace. The class must be declared in a file-scoped or normal namespace. The global namespace is not allowed."

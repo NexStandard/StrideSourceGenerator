@@ -39,20 +39,9 @@ public class NexGenerator : ISourceGenerator
         }
     }
 
-
-
-
     public const string CompilerServicesDiagnosticIdFormat = "STR0{0:000}";
 
     public const string CompilerServicesDiagnosticCategory = "Stride.CompilerServices";
-
-    public static DiagnosticDescriptor CompilerServicesUnhandledException = new DiagnosticDescriptor(
-        string.Format(CompilerServicesDiagnosticIdFormat, 1),
-        "An unhandled exception occurred",
-        "An {0} occurred while running Stride.Core.CompilerServices analyzer. {1}.",
-        CompilerServicesDiagnosticCategory,
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
 }
 
 public class NexSyntaxReceiver : ISyntaxReceiver
