@@ -12,37 +12,9 @@ namespace StrideSourceGenerator.API;
 /// <summary>
 /// Provides utility methods for handling namespace-related operations during code generation.
 /// </summary>
-/// <typeparam name="T">The type of <c>TypeDeclarationSyntax</c> that the class handles.</typeparam>
 sealed class NamespaceProvider
 {
-    public List<UsingDirective> Usings { get; set; } = new List<UsingDirective>()
-    {
-        new UsingDirective() {
-            Name = " System",
-            MetadataName = "System"
-        },
-        new UsingDirective() {
-            Name = " VYaml.Parser",
-            MetadataName = "VYaml.Parser",
-        },
-        new UsingDirective() {
-            Name = " VYaml.Emitter",
-            MetadataName = "VYaml.Emitter",
-        },
-        new UsingDirective() {
-            Name = " VYaml.Serialization",
-            MetadataName = "VYaml.Serialization"
-        },
-        new UsingDirective() {
-            Name = " System.Text",
-            MetadataName = "System.Text"
-        },
-        new UsingDirective()
-        {
-            Name =" Stride.Core",
-            MetadataName= "Stride.Core"
-        }
-    };
+    public List<string> Usings { get; set; } = new List<string>();
     /// <summary>
     /// Finds either a normal or a file-scoped namespace from a <see cref="SyntaxNode"/> by traversing its parent nodes.
     /// Then it creates a new namespace declaration.
@@ -74,9 +46,9 @@ sealed class NamespaceProvider
     /// </returns>
     public NamespaceDeclarationSyntax AddUsingDirectivess(NamespaceDeclarationSyntax normalNamespace, GeneratorExecutionContext context)
     {
-        foreach (UsingDirective allowedUsing in Usings)
+        foreach (string allowedUsing in Usings)
         {
-            normalNamespace = normalNamespace.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(allowedUsing.Name)));
+            normalNamespace = normalNamespace.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(allowedUsing)));
         }
         return normalNamespace;
     }
@@ -114,11 +86,5 @@ sealed class NamespaceProvider
             return null;
         NameSyntax name = namespaceDeclaration.Name;
         return SyntaxFactory.NamespaceDeclaration(name);
-    }
-
-    public class UsingDirective
-    {
-        public string Name { get; set; }
-        public string MetadataName { get; set; }
     }
 }
