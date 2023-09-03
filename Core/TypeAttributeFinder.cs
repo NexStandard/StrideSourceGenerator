@@ -16,12 +16,19 @@ internal class TypeAttributeFinder
     };
     public TypeDeclarationSyntax FindAttribute(SyntaxNode syntaxNode)
     {
-        if (syntaxNode is TypeDeclarationSyntax typeSyntax)
+        if (syntaxNode is ClassDeclarationSyntax typeSyntax)
         {
             AttributeSyntax attribute = typeSyntax.AttributeLists
                     .SelectMany(al => al.Attributes)
                     .FirstOrDefault(a => allowedAttributes.Contains(a.Name.ToString()));
             return typeSyntax;
+        }
+        if (syntaxNode is StructDeclarationSyntax structDeclaration)
+        {
+            AttributeSyntax attribute = structDeclaration.AttributeLists
+                    .SelectMany(al => al.Attributes)
+                    .FirstOrDefault(a => allowedAttributes.Contains(a.Name.ToString()));
+            return structDeclaration;
         }
         return null;
     }
