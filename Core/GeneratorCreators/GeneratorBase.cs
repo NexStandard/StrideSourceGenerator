@@ -24,6 +24,8 @@ internal abstract class GeneratorBase
 
     public bool StartCreation(ClassInfo classInfo)
     {
+        if (classInfo.IsAbstract())
+            return false;
         NamespaceProvider.Usings = new System.Collections.Generic.List<string>()
         {
             " System",

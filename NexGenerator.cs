@@ -2,12 +2,10 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
 using System;
-using System.Collections.Generic;
 using StrideSourceGenerator.Core.GeneratorCreators;
 using StrideSourceGenerator.Core.Roslyn;
 using System.Diagnostics;
 using System.Linq;
-using StrideSourceGenerator.Core;
 
 namespace StrideSourceGenerator;
 
@@ -27,7 +25,7 @@ public class NexGenerator : ISourceGenerator
         foreach (TypeDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
         {
             SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
-            ClassInfo info = new ClassInfo()
+            ClassInfo info = new()
             {
                 ExecutionContext = context,
                 TypeSyntax = classDeclaration,
@@ -42,22 +40,4 @@ public class NexGenerator : ISourceGenerator
     public const string CompilerServicesDiagnosticIdFormat = "STR0{0:000}";
 
     public const string CompilerServicesDiagnosticCategory = "Stride.CompilerServices";
-}
-
-public class NexSyntaxReceiver : ISyntaxReceiver
-{
-    TypeAttributeFinder typeFinder = new();
-    public List<TypeDeclarationSyntax> ClassDeclarations { get; private set; } = new();
-
-    public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-    {
-        //ClassDeclarations.Clear();
-        //StructDeclarations.Clear();
-        TypeDeclarationSyntax result = typeFinder.FindAttribute(syntaxNode);
-
-        if (result != null)
-        {
-            ClassDeclarations.Add(result);
-        }
-    }
 }
