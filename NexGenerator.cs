@@ -22,7 +22,7 @@ public class NexGenerator : ISourceGenerator
     {
         NexSyntaxReceiver syntaxReceiver = (NexSyntaxReceiver)context.SyntaxReceiver;
 
-        foreach (TypeDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
+        foreach (TypeDeclarationSyntax classDeclaration in syntaxReceiver.TypeDeclarations)
         {
             SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
             ClassInfo info = new()
