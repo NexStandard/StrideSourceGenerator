@@ -22,33 +22,21 @@ public class NexGenerator : ISourceGenerator
     private GeneratorYamlClass classGenerator { get; set; } = new();
     public void Execute(GeneratorExecutionContext context)
     {
-        try
-        {
-            NexSyntaxReceiver syntaxReceiver = (NexSyntaxReceiver)context.SyntaxReceiver;
+        NexSyntaxReceiver syntaxReceiver = (NexSyntaxReceiver)context.SyntaxReceiver;
 
-            foreach (TypeDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
+        foreach (TypeDeclarationSyntax classDeclaration in syntaxReceiver.ClassDeclarations)
+        {
+            SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
+            ClassInfo info = new ClassInfo()
             {
-                SemanticModel semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
-                ClassInfo info = new ClassInfo()
-                {
-                    ExecutionContext = context,
-                    TypeSyntax = classDeclaration,
-                    SyntaxReceiver = syntaxReceiver,
-                    Symbol = semanticModel.GetDeclaredSymbol(classDeclaration),
+                ExecutionContext = context,
+                TypeSyntax = classDeclaration,
+                SyntaxReceiver = syntaxReceiver,
+                Symbol = semanticModel.GetDeclaredSymbol(classDeclaration),
 
-                };
-                classGenerator.StartCreation(info);
-            }
+            };
+            classGenerator.StartCreation(info);
         }
-        catch (Exception ex)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(
-                CompilerServicesUnhandledException,
-                Location.None,
-                ex.GetType().Name,
-                ex.ToString()));
-        }
-
     }
 
 
