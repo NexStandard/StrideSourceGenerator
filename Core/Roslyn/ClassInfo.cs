@@ -27,8 +27,8 @@ public class ClassInfo
         {
             if (_propertyCache == null)
             {
-                var classSymbol = SemanticModel.GetDeclaredSymbol(TypeSyntax);
-                var properties = PropertyAttributeFinder.FilterBasePropertiesRecursive(ref classSymbol);
+                INamedTypeSymbol classSymbol = SemanticModel.GetDeclaredSymbol(TypeSyntax);
+                IEnumerable<IPropertySymbol> properties = PropertyAttributeFinder.FilterBasePropertiesRecursive(ref classSymbol);
                 return _propertyCache = properties.ToList();
             } else {
                 return _propertyCache;

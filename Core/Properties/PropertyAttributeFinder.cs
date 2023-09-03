@@ -27,7 +27,7 @@ internal class PropertyAttributeFinder
     /// <returns>All allowed Properties in any base class in the inheritance tree</returns>
     public static IEnumerable<IPropertySymbol> FilterBasePropertiesRecursive(ref INamedTypeSymbol currentBaseType)
     {
-        var result = new List<IPropertySymbol>();
+        List<IPropertySymbol> result = new List<IPropertySymbol>();
         while (currentBaseType != null)
         {
             result.AddRange(currentBaseType.GetMembers().OfType<IPropertySymbol>().Where(GetPropertiesWithAllowedAccessors()));

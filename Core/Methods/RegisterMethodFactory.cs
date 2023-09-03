@@ -25,9 +25,9 @@ internal class RegisterMethodFactory
     {
         if(classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
         {
-            var str = new string(',', classInfo.Generics.Parameters.Count-1);
-            var generic = $"{classInfo.SerializerSyntax.Identifier.Text}<{str}>";
-            var genericOfType = $"{classInfo.TypeName}<{str}>";
+            string str = new string(',', classInfo.Generics.Parameters.Count-1);
+            string generic = $"{classInfo.SerializerSyntax.Identifier.Text}<{str}>";
+            string genericOfType = $"{classInfo.TypeName}<{str}>";
             builder.AppendLine($"NexYamlSerializerRegistry.Default.RegisterGenericFormatter(typeof({genericOfType}),typeof({generic}));");
         }
         else

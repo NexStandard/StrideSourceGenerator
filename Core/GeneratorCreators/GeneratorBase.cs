@@ -83,11 +83,11 @@ internal abstract class GeneratorBase
     {
         if (classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
         {
-            var typeParameterList = SyntaxFactory.TypeParameterList(classInfo.Generics.Parameters);
+            TypeParameterListSyntax typeParameterList = SyntaxFactory.TypeParameterList(classInfo.Generics.Parameters);
 
             classInfo.SerializerSyntax = classInfo.SerializerSyntax.WithTypeParameterList(typeParameterList);
 
-            var genericTypeName = SyntaxFactory.ParseTypeName($"{classInfo.TypeName}<{string.Join(", ", classInfo.Generics.Parameters)}>");
+            TypeSyntax genericTypeName = SyntaxFactory.ParseTypeName($"{classInfo.TypeName}<{string.Join(", ", classInfo.Generics.Parameters)}>");
             return classInfo.SerializerSyntax.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlFormatter<{genericTypeName}?>")));
         }
         return classInfo.SerializerSyntax.AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IYamlFormatter<{classInfo.TypeName}?>"))); ;

@@ -32,11 +32,11 @@ internal class GeneratorYamlClass : GeneratorBase
         }
         
         classInfo.SerializerSyntax = AddMember(classInfo.SerializerSyntax, res);
-        var generics = classInfo.Generics;
+        TypeParameterListSyntax generics = classInfo.Generics;
         if(generics != null)
         {
-            var count = generics.Parameters.Count;
-            var x = "<"+new string(',', count-1)+">";
+            int count = generics.Parameters.Count;
+            string x = "<"+new string(',', count-1)+">";
             classInfo.SerializerSyntax = classInfo.SerializerSyntax.AddMembers(TypeTemplate.GetTemplate(classInfo.TypeName+x));
         }
         else

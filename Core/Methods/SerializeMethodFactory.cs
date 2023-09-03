@@ -28,7 +28,7 @@ internal class SerializeMethodFactory
         string generic = realClassInfo.TypeName;
         if (realClassInfo.Generics != null && realClassInfo.Generics.Parameters.Count > 0)
         {
-            var typeParameterList = SyntaxFactory.TypeParameterList(realClassInfo.Generics.Parameters);
+            TypeParameterListSyntax typeParameterList = SyntaxFactory.TypeParameterList(realClassInfo.Generics.Parameters);
 
             realClassInfo.SerializerSyntax = realClassInfo.SerializerSyntax.WithTypeParameterList(typeParameterList);
 

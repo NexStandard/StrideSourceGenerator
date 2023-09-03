@@ -20,7 +20,7 @@ internal class DeserializeMethodFactory : IDeserializeMethodFactory
         string generic = classInfo.TypeName;
         if (classInfo.Generics != null && classInfo.Generics.Parameters.Count > 0)
         {
-            var typeParameterList = SyntaxFactory.TypeParameterList(classInfo.Generics.Parameters);
+            TypeParameterListSyntax typeParameterList = SyntaxFactory.TypeParameterList(classInfo.Generics.Parameters);
 
             classInfo.SerializerSyntax = classInfo.SerializerSyntax.WithTypeParameterList(typeParameterList);
 
@@ -31,7 +31,7 @@ internal class DeserializeMethodFactory : IDeserializeMethodFactory
             defaultValues.Append("var temp").Append(property.Name).Append($"= default({property.Type});");
             objectCreation.Append(property.Name + "=" + "temp" + property.Name + ",");
         }
-        var x = $$"""
+        string x = $$"""
              public {{generic}}? Deserialize(ref YamlParser parser, YamlDeserializationContext context)
              {
                  if (parser.IsNullScalar())
