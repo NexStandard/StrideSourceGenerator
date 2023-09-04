@@ -7,6 +7,8 @@ using System.Linq;
 using System.Xml.Linq;
 using StrideSourceGenerator.Core.Roslyn;
 using Microsoft.CodeAnalysis.CSharp;
+using StrideSourceGenerator.API;
+using StrideSourceGenerator.Core.Methods.RegisterTemplates;
 
 namespace StrideSourceGenerator.Core.Methods;
 internal class DeserializeMethodFactory : IDeserializeMethodFactory
@@ -31,121 +33,114 @@ internal class DeserializeMethodFactory : IDeserializeMethodFactory
             defaultValues.Append("var temp").Append(property.Name).Append($"= default({property.Type});");
             objectCreation.Append(property.Name + "=" + "temp" + property.Name + ",");
         }
-        string x = $$"""
-             public {{generic}}? Deserialize(ref YamlParser parser, YamlDeserializationContext context)
-             {
-                 if (parser.IsNullScalar())
-                 {
-                     parser.Read();
-                     return default;
-                 }
-                 parser.ReadWithVerify(ParseEventType.MappingStart);
-                 {{defaultValues}}
-         {{MapPropertiesToSwitch(map)}}
-
-         parser.ReadWithVerify(ParseEventType.MappingEnd);
-         return new {{generic}}
+        string finishedMethod = $$"""
+         public {{generic}}? Deserialize(ref YamlParser parser, YamlDeserializationContext context)
          {
-             {{objectCreation.ToString().Trim(',')}}
-         };
+            if (parser.IsNullScalar())
+            {
+                parser.Read();
+                return default;
+            }
+            parser.ReadWithVerify(ParseEventType.MappingStart);
+            {{defaultValues}}
+            while (!parser.End && parser.CurrentEventType != ParseEventType.MappingEnd)
+            {
+                if (parser.CurrentEventType != ParseEventType.Scalar)
+                {
+                    throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
+                }
+         
+                if (!parser.TryGetScalarAsSpan(out var key))
+                {
+                    throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
+                }
+         
+                switch (key.Length)
+                {
+                {{MapPropertiesToSwitch(map)}}
+                default:
+                    parser.Read();
+                    parser.SkipCurrentNode();
+                    continue;
+                 }
+             }
+
+             parser.ReadWithVerify(ParseEventType.MappingEnd);
+             return new {{generic}}
+             {
+                 {{objectCreation.ToString().Trim(',')}}
+             };
          }
          """;
-        return SyntaxFactory.ParseMemberDeclaration(x);
+        return SyntaxFactory.ParseMemberDeclaration(finishedMethod);
     }
     public StringBuilder MapPropertiesToSwitch(Dictionary<int, List<IPropertySymbol>> properties)
     {
         StringBuilder switchFinder = new StringBuilder();
-        switchFinder.Append($$"""
-                while (!parser.End && parser.CurrentEventType != ParseEventType.MappingEnd)
-                {
-                    if (parser.CurrentEventType != ParseEventType.Scalar)
-                    {
-                        throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
-                    }
-                
-                    if (!parser.TryGetScalarAsSpan(out var key))
-                    {
-                        throw new YamlSerializerException(parser.CurrentMark, "Custom type deserialization supports only string key");
-                    }
-                
-                    switch (key.Length)
-                    {
-                """);
+        AppendWhileLoopStart(switchFinder);
+        IPropertyAppendableTemplate arrayAppender;
+        IPropertyAppendableTemplate propertyAppender;
         foreach (KeyValuePair<int, List<IPropertySymbol>> prop in properties)
         {
-
-            switchFinder.Append("case " + prop.Key + ":");
-            int counter = 0;
+            AppendSwitchCase(switchFinder, prop);
+            bool isFirstime = true;
             foreach (IPropertySymbol propert in prop.Value)
             {
-                if (counter == 0)
+                arrayAppender = new DeserializeArrayAppenderTemplate() { IsFirstTime = isFirstime };
+                propertyAppender = new DeserializePropertyAppenderTemplate() { IsFirstTime = isFirstime, };
+                if (isFirstime)
                 {
                     if (propert.Type.TypeKind == TypeKind.Array)
                     {
-                        IArrayTypeSymbol arrayType = (IArrayTypeSymbol)propert.Type;
-
-                        if (arrayType.ElementType.SpecialType == SpecialType.System_Byte)
-                        {
-                            switchFinder.Append($$"""
-                            if (key.SequenceEqual({{"UTF8" + propert.Name}}))
-                            {
-                                parser.Read();
-                                temp{{propert.Name}} = context.DeserializeByteArray(ref parser);
-                            }
-                            """);
-                        }
-                        else
-                        {
-                            switchFinder.Append($$"""
-                            if (key.SequenceEqual({{"UTF8" + propert.Name}}))
-                            {
-                                parser.Read();
-                                temp{{propert.Name}} = context.DeserializeArray<{{arrayType.ElementType}}>(ref parser);
-                            }
-                            """);
-                        }
-
+                        arrayAppender.AppendTemplate(propert, switchFinder);
                     }
                     else
                     {
-                        switchFinder.Append($$"""
-                        if (key.SequenceEqual({{"UTF8" + propert.Name}}))
-                        {
-                            parser.Read();
-                            temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
-                        }
-                        """);
+                        propertyAppender.AppendTemplate(propert, switchFinder);
                     }
-                    counter = 1;
+                    isFirstime = false;
                 }
                 else
                 {
                     if (propert.Type.TypeKind == TypeKind.Array)
                     {
-
-                        switchFinder.Append($$"""
-                            else if (key.SequenceEqual({{"UTF8" + propert.Name}}))
-                            {
-                                parser.Read();
-                                temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
-                            }
-                            """);
+                        arrayAppender.AppendTemplate(propert, switchFinder);
                     }
                     else
                     {
-                        switchFinder.Append($$"""
-                        else if (key.SequenceEqual({{"UTF8" + propert.Name}}))
-                        {
-                            parser.Read();
-                            temp{{propert.Name}} = context.DeserializeWithAlias<{{propert.Type}}>(ref parser);
-                        }
-                        """);
+                        propertyAppender.AppendTemplate(propert, switchFinder);
                     }
-
                 }
-
             }
-            switchFinder.Append("""
+            AppendElseSkip(switchFinder);
+        }
+        AppendDefaultCase(switchFinder);
+        return switchFinder;
+    }
+
+    private static void AppendDefaultCase(StringBuilder switchFinder)
+    {
+        switchFinder.Append($$"""
+
+        """);
+    }
+
+    static KeyValuePair<int, List<IPropertySymbol>> AppendSwitchCase(StringBuilder switchFinder, KeyValuePair<int, List<IPropertySymbol>> prop)
+    {
+        switchFinder.Append("case " + prop.Key + ":");
+        return prop;
+    }
+
+    static void AppendWhileLoopStart(StringBuilder switchFinder)
+    {
+        switchFinder.Append($$"""
+
+                """);
+    }
+
+    static StringBuilder AppendElseSkip(StringBuilder switchFinder)
+    {
+        return switchFinder.Append("""
                 else
                 {
                     parser.Read();
@@ -153,15 +148,5 @@ internal class DeserializeMethodFactory : IDeserializeMethodFactory
                 }
                 continue;
                 """);
-        }
-        switchFinder.Append($$"""
-        default:
-                    parser.Read();
-                    parser.SkipCurrentNode();
-                    continue;
-            }
-        }
-        """);
-        return switchFinder;
     }
 }

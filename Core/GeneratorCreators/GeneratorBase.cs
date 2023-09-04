@@ -6,6 +6,7 @@ using StrideSourceGenerator.Core.Methods;
 using StrideSourceGenerator.Core.Properties;
 using StrideSourceGenerator.Core.Roslyn;
 using StrideSourceGenerator.Core.Templates;
+using System.Data;
 using System.Linq;
 using static StrideSourceGenerator.API.NamespaceProvider;
 
@@ -26,6 +27,16 @@ internal abstract class GeneratorBase
     {
         if (classInfo.IsAbstract())
             return false;
+        SyntaxKind access;
+        try
+        {
+            access = GetAccessToken(classInfo);
+        }
+        catch
+        {
+            ReportWrongAccess(classInfo.TypeSyntax, classInfo.ExecutionContext, classInfo.TypeName);
+            return false;
+        }
         NamespaceProvider.Usings = new System.Collections.Generic.List<string>()
         {
             " System",
@@ -40,8 +51,9 @@ internal abstract class GeneratorBase
 
         AttributeSyntax compilerGeneratedAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("System.Runtime.CompilerServices.CompilerGenerated"));
 
+
         classInfo.SerializerSyntax = SyntaxFactory.ClassDeclaration(classInfo.SerializerName)
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+            .AddModifiers(SyntaxFactory.Token(access))
             .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(compilerGeneratedAttribute));
         NamespaceDeclarationSyntax normalNamespace = NamespaceProvider.GetNamespaceFromSyntaxNode(classInfo);
         if (normalNamespace == null)
@@ -63,7 +75,35 @@ internal abstract class GeneratorBase
         return true;
     }
     protected abstract ClassDeclarationSyntax CreateGenerator(ClassInfo classInfo);
-
+    private SyntaxKind GetAccessToken(ClassInfo info)
+    {
+        foreach (var modifier in info.TypeSyntax.Modifiers)
+        {
+            if (modifier.Kind() == SyntaxKind.PublicKeyword)
+            {
+                return SyntaxKind.PublicKeyword;
+            }
+            else if (modifier.Kind() == SyntaxKind.InternalKeyword)
+            {
+                return SyntaxKind.InternalKeyword;
+            }
+        }
+        throw new System.Exception("Wrong Access Type");
+    }
+    private static void ReportWrongAccess(TypeDeclarationSyntax classDeclaration, GeneratorExecutionContext context, string className)
+    {
+        DiagnosticDescriptor error = new DiagnosticDescriptor(
+            id: string.Format(NexGenerator.CompilerServicesDiagnosticIdFormat, 2),
+            title: "Invalid Access Token",
+            messageFormat: $"The Type {className} is not declared as public or internal, the Access to the class must be public or internal.",
+            category: NexGenerator.CompilerServicesDiagnosticCategory,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true,
+            description: $"The class {className} is not declared as public or internal, the Access to the class must be public or internal."
+        );
+        Location location = Location.Create(classDeclaration.SyntaxTree, classDeclaration.Identifier.Span);
+        context.ReportDiagnostic(Diagnostic.Create(error, location));
+    }
     protected string GetIdentifierName(TypeDeclarationSyntax classDeclaration)
     {
         return classDeclaration.Identifier.ValueText;
