@@ -27,7 +27,14 @@ internal class SerializeMethodFactory
     public string ConvertToYamlTemplate(ClassInfo realClassInfo)
     {
         string generic = realClassInfo.TypeName;
-        string tag = $" emitter.Tag($\"!{{typeof({realClassInfo.TypeName})}}\");";
+        string tag = $$"""
+            if(context.IsRedirected || context.IsFirst)
+            {
+                emitter.Tag($"!{typeof({{realClassInfo.TypeName}})}");
+                context.IsRedirected = false;
+                context.IsFirst = false;
+            }
+            """;
         
         if (realClassInfo.Generics != null && realClassInfo.Generics.Parameters.Count > 0)
         {
@@ -67,10 +74,26 @@ internal class SerializeMethodFactory
             }
             else
             {
-                sb.Append($"""
+                if(!inheritedProperty.Type.IsAbstract && inheritedProperty.Type.IsReferenceType && !inheritedProperty.IsSealed && ((INamedTypeSymbol)inheritedProperty.Type).TypeArguments.Count() == 0)
+                {
+                    sb.Append($$"""
+                     IYamlFormatter<{{inheritedProperty.Type.Name}}> {{propertyname}}formatter = context.Resolver.FindCompatibleFormatter(value.{{propertyname}},value.{{propertyname}}.GetType(),out bool is{{propertyname}}Redirected);
+                     if({{propertyname}}formatter != null)
+                     {
+                        emitter.WriteString("{{propertyname}}", VYaml.Emitter.ScalarStyle.Plain);
+                        context.IsRedirected = is{{propertyname}}Redirected;
+                        {{propertyname}}formatter.Serialize(ref emitter, value.{{propertyname}},context);
+                     }
+                    """);
+                }
+                else
+                {
+                    sb.Append($"""
                      emitter.WriteString("{propertyname}", VYaml.Emitter.ScalarStyle.Plain);
                      context.Serialize(ref emitter, value.{propertyname});
                     """);
+                }
+
             }
             Add(propertyname);
 
