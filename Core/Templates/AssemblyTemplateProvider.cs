@@ -2,10 +2,12 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using StrideSourceGenerator.API;
 using StrideSourceGenerator.Core.Roslyn;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace StrideSourceGenerator.Core.Templates;
-
-internal class TypeTemplateProvider : ITemplateProvider
+internal class AssemblyTemplateProvider : ITemplateProvider
 {
     public MemberDeclarationSyntax GetTemplate(ClassInfo classInfo)
     {
@@ -17,6 +19,6 @@ internal class TypeTemplateProvider : ITemplateProvider
             string emptyGenerics = "<" + new string(',', count - 1) + ">";
             type += emptyGenerics;
         }
-        return SyntaxFactory.ParseMemberDeclaration($"public Type IdentifierType {{ get; }} = typeof({type});");
+        return SyntaxFactory.ParseMemberDeclaration($"public string AssemblyName {{ get; }} = typeof({type}).Assembly.GetName().Name;");
     }
 }

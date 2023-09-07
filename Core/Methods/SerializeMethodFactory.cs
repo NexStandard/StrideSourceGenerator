@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using StrideSourceGenerator.API;
 using StrideSourceGenerator.Core.Roslyn;
 using StrideSourceGenerator.Core.Templates;
 using System;
@@ -11,7 +12,7 @@ using System.Text;
 using System.Xml.Linq;
 
 namespace StrideSourceGenerator.Core.Methods;
-internal class SerializeMethodFactory
+internal class SerializeMethodFactory : IAppendableTemplate
 {
     public List<string> PrivateProperties { get; set; } = new List<string>();
     public void Add(string name)
@@ -20,22 +21,22 @@ internal class SerializeMethodFactory
         StringBuilder sb = new StringBuilder();
         foreach (byte by in bytes)
         {
-            sb.Append(by+",");
+            sb.Append(by + ",");
         }
         PrivateProperties.Add($"private static readonly byte[] UTF8{name} = new byte[]{{{sb.ToString().Trim(',')}}};");
     }
-    public string ConvertToYamlTemplate(ClassInfo realClassInfo)
+    public void AppendTemplate(ClassInfo realClassInfo, StringBuilder builder)
     {
         string generic = realClassInfo.TypeName;
         string tag = $$"""
             if(context.IsRedirected || context.IsFirst)
             {
-                emitter.Tag($"!{typeof({{realClassInfo.TypeName}})}");
+                emitter.Tag($"!{typeof({{realClassInfo.TypeName}})},{AssemblyName}");
                 context.IsRedirected = false;
                 context.IsFirst = false;
             }
             """;
-        
+
         if (realClassInfo.Generics != null && realClassInfo.Generics.Parameters.Count > 0)
         {
             TypeParameterListSyntax typeParameterList = SyntaxFactory.TypeParameterList(realClassInfo.Generics.Parameters);
@@ -74,7 +75,7 @@ internal class SerializeMethodFactory
             }
             else
             {
-                if(!inheritedProperty.Type.IsAbstract && inheritedProperty.Type.IsReferenceType && !inheritedProperty.IsSealed && ((INamedTypeSymbol)inheritedProperty.Type).TypeArguments.Count() == 0)
+                if (!inheritedProperty.Type.IsAbstract && inheritedProperty.Type.IsReferenceType && !inheritedProperty.IsSealed && ((INamedTypeSymbol)inheritedProperty.Type).TypeArguments.Count() == 0)
                 {
                     sb.Append($$"""
                      IYamlFormatter<{{inheritedProperty.Type.Name}}> {{propertyname}}formatter = context.Resolver.FindCompatibleFormatter(value.{{propertyname}},value.{{propertyname}}.GetType(),out bool is{{propertyname}}Redirected);
@@ -103,7 +104,7 @@ internal class SerializeMethodFactory
             //       sb.Append($"new YamlScalarNode(nameof(objToSerialize.{propertyname})), new YamlScalarNode(objToSerialize.{propertyname}),");
             //   }
         }
-            return $$"""
+        builder.Append($$"""
         public void Serialize(ref Utf8YamlEmitter emitter, {{generic}}? value, YamlSerializationContext context)
         {
             if (value is null)
@@ -117,7 +118,6 @@ internal class SerializeMethodFactory
             emitter.EndMapping();
             
         }
-        """;
-
+        """);
     }
 }
