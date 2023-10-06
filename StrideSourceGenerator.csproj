@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-	  <LangVersion>11</LangVersion>
+	  <LangVersion>preview</LangVersion>
 	  <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
   </PropertyGroup>
@@ -14,6 +14,14 @@
 	  </PackageReference>
 	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
   </ItemGroup>
+	<ItemGroup>
+		<Using Include="System" />
+		<Using Include="System.Linq" />
+		<Using Include="System.Collections.Generic" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="ModeInfos\Binary\" />
+	</ItemGroup>
 
 
 </Project>
