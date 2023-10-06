@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
+using StrideSourceGenerator.NexAPI.Implementations;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
-using StrideSourceGenerator.NexAPI.PreProcessor.Implementations;
 
 internal static class AnalyzerExtensions
 {

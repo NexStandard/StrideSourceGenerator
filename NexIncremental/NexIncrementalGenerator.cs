@@ -1,12 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using StrideSourceGenerator.Core;
-using StrideSourceGenerator.Incremental;
 using StrideSourceGenerator.ModeInfos.Yaml;
 using StrideSourceGenerator.NexAPI;
-using StrideSourceGenerator.NexAPI.PreProcessor.Analyzers;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using StrideSourceGenerator.NexAPI.Analysation.Analyzers;
 
 namespace StrideSourceGenerator.NexIncremental;
 [Generator]
@@ -28,7 +27,6 @@ internal class NexIncrementalGenerator : IIncrementalGenerator
                                        Compilation compilation = ctx.SemanticModel.Compilation;
                                        SemanticModel semanticModel = ctx.SemanticModel;
                                        return CreateClassInfo(compilation,classDeclaration,semanticModel);
-                                       
                                    })
                                    .Collect();
 
@@ -50,7 +48,7 @@ internal class NexIncrementalGenerator : IIncrementalGenerator
         MemberSelector memberSelector = new MemberSelector(dataContractAttribute);
         AssignModeInfo assignMode = new AssignModeInfo();
         
-        IMemberSymbolAnalyzer<IPropertySymbol> standardAssignAnalyzer = new BaseAnalyzer<IPropertySymbol>(assignMode);
+        IMemberSymbolAnalyzer<IPropertySymbol> standardAssignAnalyzer = new PropertyAnalyzer(assignMode);
         
         ClassInfoMemberProcessor classInfoMemberProcessor = new ClassInfoMemberProcessor(memberSelector, compilation);
          classInfoMemberProcessor.PropertyAnalyzers.Add(standardAssignAnalyzer);

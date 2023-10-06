@@ -1,5 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using StrideSourceGenerator.NexAPI.PreProcessor.Implementations;
+using StrideSourceGenerator.NexAPI.Implementations;
 
 internal static class PropertyExtensions
 {

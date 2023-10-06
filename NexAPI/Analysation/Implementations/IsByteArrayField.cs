@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
 
-namespace StrideSourceGenerator.NexAPI.PreProcessor.Implementations;
+namespace StrideSourceGenerator.NexAPI.Implementations;
 
 internal class IsByteArrayField(IMemberSymbolAnalyzer<IFieldSymbol> analyzer) : MemberSymbolAnalyzer<IFieldSymbol>(new IsArrayField(analyzer))
 {

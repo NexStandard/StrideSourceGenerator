@@ -1,9 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using StrideSourceGenerator.Incremental;
+using StrideSourceGenerator.Core;
 using StrideSourceGenerator.NexAPI.Core;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
-using StrideSourceGenerator.NexAPI.PreProcessor.Analyzers;
 using System.Collections.Immutable;
 
 namespace StrideSourceGenerator.NexAPI;

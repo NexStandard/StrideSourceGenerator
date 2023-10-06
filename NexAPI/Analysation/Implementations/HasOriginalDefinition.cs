@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
 
-namespace StrideSourceGenerator.NexAPI.PreProcessor.Implementations;
+namespace StrideSourceGenerator.NexAPI.Implementations;
 internal class HasOriginalDefinition(IMemberSymbolAnalyzer<IPropertySymbol> analyzer, INamedTypeSymbol originalDefinition) : MemberSymbolAnalyzer<IPropertySymbol>(analyzer)
 {
     private static readonly SymbolEqualityComparer Comparer = SymbolEqualityComparer.Default;

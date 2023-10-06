@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace StrideSourceGenerator.Incremental;
+namespace StrideSourceGenerator.Core;
 internal static class WellKnownReferences
 {
     public static INamedTypeSymbol DataMemberAttribute(Compilation compilation)
