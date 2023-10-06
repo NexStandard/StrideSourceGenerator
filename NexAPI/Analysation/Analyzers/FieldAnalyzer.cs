@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
 
 namespace StrideSourceGenerator.NexAPI.Analysation.Analyzers;
 internal class FieldAnalyzer : IMemberSymbolAnalyzer<IFieldSymbol>

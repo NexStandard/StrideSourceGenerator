@@ -6,6 +6,7 @@ using StrideSourceGenerator.NexAPI;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using StrideSourceGenerator.NexAPI.Analysation.Analyzers;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace StrideSourceGenerator.NexIncremental;
 [Generator]

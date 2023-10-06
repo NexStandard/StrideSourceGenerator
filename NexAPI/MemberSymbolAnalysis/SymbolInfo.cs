@@ -1,4 +1,5 @@
 ﻿using StrideSourceGenerator.NexAPI;
+using System.Collections.Immutable;
 
 internal class SymbolInfo
 {
