@@ -53,8 +53,8 @@ internal class NexIncrementalGenerator : IIncrementalGenerator
         
         ClassInfoMemberProcessor classInfoMemberProcessor = new ClassInfoMemberProcessor(memberSelector, compilation);
          classInfoMemberProcessor.PropertyAnalyzers.Add(standardAssignAnalyzer);
-        
-         return ClassInfo.CreateFrom(type,classInfoMemberProcessor);
+        var members = classInfoMemberProcessor.Process(type);
+         return ClassInfo.CreateFrom(type,members);
        }
 
     private static void Generate(

@@ -10,11 +10,9 @@ internal class ClassInfoMemberProcessor(IMemberSelector selector, Compilation co
 {
     public List<IMemberSymbolAnalyzer<IPropertySymbol>> PropertyAnalyzers { get; set; } = new();
     public List<IMemberSymbolAnalyzer<IFieldSymbol>> FieldAnalyzers { get; set; } = new();
-    private INamedTypeSymbol dataMemberAttribute;
-    private INamedTypeSymbol dataMembermode;
     private INamedTypeSymbol DataMemberAttribute =>  WellKnownReferences.DataMemberAttribute(compilation);
     private INamedTypeSymbol DataMemberMode => WellKnownReferences.DataMemberMode(compilation);
-    public List<SymbolInfo> Process(ITypeSymbol type)
+    public ImmutableList<SymbolInfo> Process(ITypeSymbol type)
     {
         IReadOnlyList<ISymbol> symbols = selector.GetAllMembers(type);
         List<SymbolInfo> result = new List<SymbolInfo>();
@@ -30,7 +28,7 @@ internal class ClassInfoMemberProcessor(IMemberSelector selector, Compilation co
                 ProcessAnalyzers(FieldAnalyzers, field, result, context);
             }
         }
-        return result.ToList();
+        return ImmutableList.Create(result.ToArray());
     }
     void ProcessAnalyzers<T>(List<IMemberSymbolAnalyzer<T>> analyzers, T symbol, List<SymbolInfo> result, DataMemberContext context)
         where T : ISymbol

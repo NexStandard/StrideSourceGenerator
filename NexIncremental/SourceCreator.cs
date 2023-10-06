@@ -37,7 +37,7 @@ using Stride.Core;
 file class {info.GeneratorName} : IYamlFormatter<{info.Name}>
 {{
     string AssemblyName {{ get; }} = typeof({info.Name}).Assembly.GetName().Name;
-    string IdentifierTag {{ get; }} = typeof({info.Name}).Name
+    string IdentifierTag {{ get; }} = typeof({info.Name}).Name;
     Type IdentifierType {{ get; }} = typeof({info.Name});
 
     {info.Accessor} void Register()
