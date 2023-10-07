@@ -64,7 +64,7 @@ file class {info.GeneratorName} : IYamlFormatter<{info.Name}>
             context.IsRedirected = false;
             context.IsFirst = false;
         }}
-        {serializerEmitter.Create(info)}
+{serializerEmitter.Create(info)}
         emitter.EndMapping();
     }}
 

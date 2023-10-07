@@ -26,8 +26,8 @@ internal class SerializeEmitter : ITemplate
             else
             {
                 sb.AppendLine($$"""
-                            emitter.WriteString("{{member.Name}}", VYaml.Emitter.ScalarStyle.Plain);
-                            context.Serialize(ref emitter, value.{{member.Name}});
+                        emitter.WriteString("{{member.Name}}", VYaml.Emitter.ScalarStyle.Plain);
+                        context.Serialize(ref emitter, value.{{member.Name}});
                 """);
             }
         }
