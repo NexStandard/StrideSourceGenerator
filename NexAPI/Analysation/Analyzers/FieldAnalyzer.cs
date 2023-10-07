@@ -20,7 +20,9 @@ internal class FieldAnalyzer : IMemberSymbolAnalyzer<IFieldSymbol>
         {
             Name = context.Symbol.Name,
             MemberGenerator = memberGenerator,
-            Type = context.Symbol.Type.ContainingNamespace.Name + "." + context.Symbol.Type.Name
+            Type = context.Symbol.Type.ContainingNamespace.Name + "." + context.Symbol.Type.Name,
+            IsAbstract = context.Symbol.Type.IsAbstract,
+            IsInterface = context.Symbol.Type.TypeKind == TypeKind.Interface,
         };
     }
 

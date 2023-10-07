@@ -1,7 +1,7 @@
 ﻿namespace StrideSourceGenerator.NexAPI;
 internal interface IContentModeInfo
 {
-    public string TempVariable { get; }
+    public bool IsContentMode { get; set; }
     public string GenerationInvocation { get; }
     public bool NeedsFinalAssignment { get; }
 }

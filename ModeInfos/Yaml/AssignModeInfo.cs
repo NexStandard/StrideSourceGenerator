@@ -3,7 +3,7 @@
 namespace StrideSourceGenerator.ModeInfos.Yaml;
 internal class AssignModeInfo : IContentModeInfo
 {
-    public string TempVariable { get; }
+    public bool IsContentMode { get; set; }
     public string GenerationInvocation { get; }
     public bool NeedsFinalAssignment { get; }
 }
