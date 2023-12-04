@@ -1,11 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
 
-namespace StrideSourceGenerator.NexAPI.Implementations;
-internal class IsArrayField(IMemberSymbolAnalyzer<IFieldSymbol> analyzer) : MemberSymbolAnalyzer<IFieldSymbol>(analyzer)
+namespace StrideSourceGenerator.NexAPI.Implementations
 {
-    public override bool AppliesTo(MemberContext<IFieldSymbol> context)
+    internal class IsArrayField(IMemberSymbolAnalyzer<IFieldSymbol> analyzer) : MemberSymbolAnalyzer<IFieldSymbol>(analyzer)
     {
-        return context.Symbol.Type.TypeKind == TypeKind.Array;
+        public override bool AppliesTo(MemberContext<IFieldSymbol> context)
+        {
+            return context.Symbol.Type.TypeKind == TypeKind.Array;
+        }
     }
 }

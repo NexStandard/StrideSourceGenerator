@@ -1,12 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
 
-namespace StrideSourceGenerator.NexAPI.Implementations;
-
-internal class IsByteArrayField(IMemberSymbolAnalyzer<IFieldSymbol> analyzer) : MemberSymbolAnalyzer<IFieldSymbol>(new IsArrayField(analyzer))
+namespace StrideSourceGenerator.NexAPI.Implementations
 {
-    public override bool AppliesTo(MemberContext<IFieldSymbol> symbol)
+    internal class IsByteArrayField(IMemberSymbolAnalyzer<IFieldSymbol> analyzer) : MemberSymbolAnalyzer<IFieldSymbol>(new IsArrayField(analyzer))
     {
-        return ((IArrayTypeSymbol)symbol.Symbol.Type).ElementType.SpecialType == SpecialType.System_Byte;
+        public override bool AppliesTo(MemberContext<IFieldSymbol> symbol)
+        {
+            return ((IArrayTypeSymbol)symbol.Symbol.Type).ElementType.SpecialType == SpecialType.System_Byte;
+        }
     }
 }

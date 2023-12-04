@@ -3,16 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StrideSourceGenerator.Templates.Registration;
-internal class InterfaceRegister : ITemplate
+namespace StrideSourceGenerator.Templates.Registration
 {
-    public string Create(ClassInfo info)
+    internal class InterfaceRegister : ITemplate
     {
-        StringBuilder sb = new ();
-        foreach(string interfac in info.AllInterfaces)
+        public string Create(ClassInfo info)
         {
-            sb.AppendLine(Constants.SerializerRegistry + string.Format(Constants.RegisterInterface, "this", interfac));
+            StringBuilder sb = new();
+            foreach (string interfac in info.AllInterfaces)
+            {
+                sb.AppendLine(Constants.SerializerRegistry + string.Format(Constants.RegisterInterface, "this", interfac));
+            }
+            return sb.ToString();
         }
-        return sb.ToString();
     }
 }

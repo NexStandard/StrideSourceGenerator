@@ -1,45 +1,46 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using StrideSourceGenerator.Core;
 using StrideSourceGenerator.NexAPI.Core;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
 using System.Collections.Immutable;
 
-namespace StrideSourceGenerator.NexAPI;
-internal class ClassInfoMemberProcessor(IMemberSelector selector, Compilation compilation)
+namespace StrideSourceGenerator.NexAPI
 {
-    public List<IMemberSymbolAnalyzer<IPropertySymbol>> PropertyAnalyzers { get; set; } = new();
-    public List<IMemberSymbolAnalyzer<IFieldSymbol>> FieldAnalyzers { get; set; } = new();
-    private INamedTypeSymbol DataMemberAttribute =>  WellKnownReferences.DataMemberAttribute(compilation);
-    private INamedTypeSymbol DataMemberMode => WellKnownReferences.DataMemberMode(compilation);
-    public ImmutableList<SymbolInfo> Process(ITypeSymbol type)
+    internal class ClassInfoMemberProcessor(IMemberSelector selector, Compilation compilation)
     {
-        IReadOnlyList<ISymbol> symbols = selector.GetAllMembers(type);
-        List<SymbolInfo> result = new List<SymbolInfo>();
-        foreach (ISymbol symbol in symbols)
+        public List<IMemberSymbolAnalyzer<IPropertySymbol>> PropertyAnalyzers { get; set; } = new();
+        public List<IMemberSymbolAnalyzer<IFieldSymbol>> FieldAnalyzers { get; set; } = new();
+        private INamedTypeSymbol DataMemberAttribute => WellKnownReferences.DataMemberAttribute(compilation);
+        public ImmutableList<SymbolInfo> Process(ITypeSymbol type)
         {
-            DataMemberContext context = DataMemberContext.Create(symbol, DataMemberAttribute, DataMemberMode);
-            if (symbol == null)
-                continue;
-            if (symbol is IPropertySymbol property)
-                ProcessAnalyzers(PropertyAnalyzers, property, result, context);
-            else if (symbol is IFieldSymbol field)
+            IReadOnlyList<ISymbol> symbols = selector.GetAllMembers(type);
+            List<SymbolInfo> result = new List<SymbolInfo>();
+            foreach (ISymbol symbol in symbols)
             {
-                ProcessAnalyzers(FieldAnalyzers, field, result, context);
+                DataMemberContext context = DataMemberContext.Create(symbol, DataMemberAttribute);
+                if (symbol == null)
+                    continue;
+                if (symbol is IPropertySymbol property)
+                    ProcessAnalyzers(PropertyAnalyzers, property, result, context);
+                else if (symbol is IFieldSymbol field)
+                {
+                    ProcessAnalyzers(FieldAnalyzers, field, result, context);
+                }
             }
+            return ImmutableList.Create(result.ToArray());
         }
-        return ImmutableList.Create(result.ToArray());
-    }
-    void ProcessAnalyzers<T>(List<IMemberSymbolAnalyzer<T>> analyzers, T symbol, List<SymbolInfo> result, DataMemberContext context)
-        where T : ISymbol
-    {
-        foreach (IMemberSymbolAnalyzer<T> analyzer in analyzers)
+        void ProcessAnalyzers<T>(List<IMemberSymbolAnalyzer<T>> analyzers, T symbol, List<SymbolInfo> result, DataMemberContext context)
+            where T : ISymbol
         {
-            MemberContext<T> memberContext = new MemberContext<T>(symbol, context);
+            foreach (IMemberSymbolAnalyzer<T> analyzer in analyzers)
+            {
+                MemberContext<T> memberContext = new MemberContext<T>(symbol, context);
 
-            SymbolInfo temp = analyzer.Analyze(memberContext);
-            
-                result.Add(temp);
+                SymbolInfo temp = analyzer.Analyze(memberContext);
+                if (!temp.IsEmpty)
+                    result.Add(temp);
+            }
         }
     }
 }

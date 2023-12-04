@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using StrideSourceGenerator.NexAPI.Implementations;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
 

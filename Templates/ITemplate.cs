@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StrideSourceGenerator.Templates;
-internal interface ITemplate
+namespace StrideSourceGenerator.Templates
 {
-    public string Create(ClassInfo info);
+    internal interface ITemplate
+    {
+        public string Create(ClassInfo info);
+    }
 }

@@ -1,12 +1,14 @@
 ﻿using Microsoft.CodeAnalysis;
 using StrideSourceGenerator.NexAPI.MemberSymbolAnalysis;
 
-namespace StrideSourceGenerator.NexAPI.Implementations;
-internal class IsNonStatic<T>(IMemberSymbolAnalyzer<T> analyzer) : MemberSymbolAnalyzer<T>(analyzer)
-    where T : ISymbol
+namespace StrideSourceGenerator.NexAPI.Implementations
 {
-    public override bool AppliesTo(MemberContext<T> symbol)
+    internal class IsNonStatic<T>(IMemberSymbolAnalyzer<T> analyzer) : MemberSymbolAnalyzer<T>(analyzer)
+        where T : ISymbol
     {
-        return !symbol.Symbol.IsStatic;
+        public override bool AppliesTo(MemberContext<T> symbol)
+        {
+            return !symbol.Symbol.IsStatic;
+        }
     }
 }

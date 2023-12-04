@@ -1,9 +1,11 @@
 ﻿using StrideSourceGenerator.NexAPI;
 
-namespace StrideSourceGenerator.ModeInfos.Yaml;
-internal class AssignModeInfo : IContentModeInfo
+namespace StrideSourceGenerator.ModeInfos.Yaml
 {
-    public bool IsContentMode { get; set; }
-    public string GenerationInvocation { get; }
-    public bool NeedsFinalAssignment { get; }
+    internal class AssignModeInfo : IContentModeInfo
+    {
+        public bool IsContentMode { get; set; }
+        public string GenerationInvocation { get; }
+        public bool NeedsFinalAssignment { get; }
+    }
 }

@@ -3,17 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StrideSourceGenerator.Templates.Registration;
-internal class SerializeEmitter : ITemplate
+namespace StrideSourceGenerator.Templates.Registration
 {
-    public string Create(ClassInfo info)
+    internal class SerializeEmitter : ITemplate
     {
-        StringBuilder sb = new StringBuilder();
-        foreach(var member in info.MemberSymbols)
+        public string Create(ClassInfo info)
         {
-            if(member.IsAbstract || member.IsInterface)
+            StringBuilder sb = new StringBuilder();
+            foreach (SymbolInfo member in info.MemberSymbols)
             {
-                sb.AppendLine($$"""
+                if (member.IsAbstract || member.IsInterface)
+                {
+                    sb.AppendLine($$"""
                             IYamlFormatter<{{member.Type}}> {{member.Name}}formatter = context.Resolver.FindCompatibleFormatter(value.{{member.Name}},value.{{member.Name}}.GetType(),out bool is{{member.Name}}Redirected);
                             if({{member.Name}}formatter is not null)
                             {
@@ -22,15 +23,16 @@ internal class SerializeEmitter : ITemplate
                                 {{member.Name}}formatter.Serialize(ref emitter, value.{{member.Name}},context);
                             }
                     """);
-            }
-            else
-            {
-                sb.AppendLine($$"""
+                }
+                else
+                {
+                    sb.AppendLine($$"""
                         emitter.WriteString("{{member.Name}}", VYaml.Emitter.ScalarStyle.Plain);
                         context.Serialize(ref emitter, value.{{member.Name}});
                 """);
+                }
             }
+            return sb.ToString();
         }
-        return sb.ToString();
     }
 }

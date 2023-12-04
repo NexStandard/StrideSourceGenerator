@@ -1,10 +1,12 @@
 ﻿using StrideSourceGenerator.NexAPI;
 
-namespace StrideSourceGenerator.ModeInfos.Yaml;
-internal class ArrayContentModeInfo : IContentModeInfo
+namespace StrideSourceGenerator.ModeInfos.Yaml
 {
-    public string TempVariable { get; }
-    public string GenerationInvocation { get; }
-    public bool NeedsFinalAssignment { get; }
-    public bool IsContentMode { get; set; }
+    internal class ArrayContentModeInfo : IContentModeInfo
+    {
+        public string TempVariable { get; }
+        public string GenerationInvocation { get; }
+        public bool NeedsFinalAssignment { get; }
+        public bool IsContentMode { get; set; }
+    }
 }

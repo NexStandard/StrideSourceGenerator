@@ -3,12 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StrideSourceGenerator.Templates.Registration;
-internal class ThisRegister : ITemplate
+namespace StrideSourceGenerator.Templates.Registration
 {
-
-    public string Create(ClassInfo info)
+    internal class ThisRegister : ITemplate
     {
-        return Constants.SerializerRegistry + string.Format(Constants.RegisterFormatter, "this");
+
+        public string Create(ClassInfo info)
+        {
+            return Constants.SerializerRegistry + string.Format(Constants.RegisterFormatter, "this");
+        }
     }
 }

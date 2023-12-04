@@ -3,16 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StrideSourceGenerator.Templates.Registration;
-internal class AbstractRegister : ITemplate
+namespace StrideSourceGenerator.Templates.Registration
 {
-    public string Create(ClassInfo info)
+    internal class AbstractRegister : ITemplate
     {
-        StringBuilder sb = new();
-        //foreach (string @abstract in info.AllAbstracts)
+        public string Create(ClassInfo info)
         {
-          //  sb.AppendLine(Constants.SerializerRegistry + string.Format(Constants.RegisterAbstractClass, "this", @abstract));
+            StringBuilder sb = new();
+            //foreach (string @abstract in info.AllAbstracts)
+            {
+                //  sb.AppendLine(Constants.SerializerRegistry + string.Format(Constants.RegisterAbstractClass, "this", @abstract));
+            }
+            return sb.ToString();
         }
-        return sb.ToString();
     }
 }
